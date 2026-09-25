@@ -4,16 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { ROLE_LABELS } from "@/lib/labels";
 import { NewUserDialog } from "./new-user-dialog";
 import { ToggleActiveButton } from "./toggle-active-switch";
-
-const ROLE_LABELS: Record<string, string> = {
-  ADMIN: "Administrador",
-  BROKER: "Corredor/ejecutivo",
-  CUSTOMER_SERVICE: "Servicio al cliente",
-  ACCOUNTING: "Contabilidad",
-  READ_ONLY: "Solo lectura",
-};
 
 export default async function UsersPage() {
   const session = await auth();

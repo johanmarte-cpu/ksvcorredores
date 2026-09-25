@@ -16,14 +16,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createUser } from "./actions";
 import { useCloseDialogOnSuccess } from "@/lib/use-close-on-success";
-
-const ROLE_LABELS: Record<string, string> = {
-  ADMIN: "Administrador",
-  BROKER: "Corredor/ejecutivo",
-  CUSTOMER_SERVICE: "Servicio al cliente",
-  ACCOUNTING: "Contabilidad",
-  READ_ONLY: "Solo lectura",
-};
+import { ROLE_LABELS } from "@/lib/labels";
 
 export function NewUserDialog() {
   const [open, setOpen] = useState(false);

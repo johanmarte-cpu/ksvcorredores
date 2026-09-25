@@ -49,72 +49,77 @@
 }
 
 :root {
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  /* KSV Corredores de Seguros brand palette */
+  --brand-navy: #06336c;
+  --brand-blue: #0763b0;
+  --brand-green: #2c8470;
+
+  --card: #ffffff;
+  --card-foreground: #0f1b2a;
+  --popover: #ffffff;
+  --popover-foreground: #0f1b2a;
+  --primary: var(--brand-navy);
+  --primary-foreground: #ffffff;
+  --secondary: #eaf1f8;
+  --secondary-foreground: var(--brand-navy);
+  --muted: #eef2f6;
+  --muted-foreground: #5b6b7d;
+  --accent: #e3eef8;
+  --accent-foreground: var(--brand-navy);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: var(--brand-blue);
+  --chart-1: var(--brand-navy);
+  --chart-2: var(--brand-blue);
+  --chart-3: var(--brand-green);
+  --chart-4: #5b6b7d;
+  --chart-5: #94a3b8;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Sidebar stays a fixed light brand chrome in both themes so the logo
+     (navy wordmark on a light background) always reads correctly. */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f1b2a;
+  --sidebar-primary: var(--brand-navy);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eaf1f8;
+  --sidebar-accent-foreground: var(--brand-navy);
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: var(--brand-blue);
+  --background: #f6f8fa;
+  --foreground: #0f1b2a;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --brand-navy: #06336c;
+  --brand-blue: #3b9ae0;
+  --brand-green: #35a189;
+
+  --background: #0a1420;
+  --foreground: #e6edf3;
+  --card: #101b2b;
+  --card-foreground: #e6edf3;
+  --popover: #101b2b;
+  --popover-foreground: #e6edf3;
+  --primary: var(--brand-blue);
+  --primary-foreground: #071019;
+  --secondary: #17263b;
+  --secondary-foreground: #e6edf3;
+  --muted: #17263b;
+  --muted-foreground: #8fa3b8;
+  --accent: #1b2e47;
+  --accent-foreground: #e6edf3;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.14);
+  --ring: var(--brand-blue);
+  --chart-1: var(--brand-blue);
+  --chart-2: #7cc4f0;
+  --chart-3: var(--brand-green);
+  --chart-4: #8fa3b8;
+  --chart-5: #5b6b7d;
+  /* Sidebar intentionally not overridden here — stays the light brand chrome
+     defined in :root so the logo keeps its native white background. */
 }
 
 @layer base {

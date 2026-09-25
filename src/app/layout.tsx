@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Corredor Pro",
-  description: "Sistema de gestión para corredores de seguros",
+  title: "KSV Corredores de Seguros",
+  description: "Sistema de gestión para KSV Corredores de Seguros",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -24,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
         <TooltipProvider>

@@ -1,3 +1,11 @@
+export const ROLE_LABELS: Record<string, string> = {
+  ADMIN: "Administrador",
+  BROKER: "Corredor/ejecutivo",
+  CUSTOMER_SERVICE: "Servicio al cliente",
+  ACCOUNTING: "Contabilidad",
+  READ_ONLY: "Solo lectura",
+};
+
 export const LOB_LABELS: Record<string, string> = {
   AUTO: "Auto",
   LIFE: "Vida",
