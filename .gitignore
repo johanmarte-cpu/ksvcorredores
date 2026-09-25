@@ -48,3 +48,6 @@ next-env.d.ts
 /.windsurf/skills
 /.agents/skills
 skills-lock.json
+
+.vercel
+.env*

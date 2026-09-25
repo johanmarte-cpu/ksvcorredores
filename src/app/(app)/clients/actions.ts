@@ -1,9 +1,20 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { put, del } from "@vercel/blob";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+
+const ALLOWED_DOCUMENT_TYPES = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+]);
+const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024; // 10MB
 
 const clientSchema = z.object({
   type: z.enum(["PERSON", "COMPANY"]),
@@ -56,5 +67,61 @@ export async function addClientNote(clientId: string, content: string) {
   await prisma.clientNote.create({
     data: { clientId, content, authorId: session?.user?.id },
   });
+  revalidatePath(`/clients/${clientId}`);
+}
+
+export async function uploadClientDocument(_prevState: { error?: string } | undefined, formData: FormData) {
+  const session = await auth();
+  const clientId = formData.get("clientId");
+  const file = formData.get("file");
+
+  if (typeof clientId !== "string" || !clientId) {
+    return { error: "Cliente inválido" };
+  }
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Selecciona un archivo" };
+  }
+  if (file.size > MAX_DOCUMENT_SIZE) {
+    return { error: "El archivo no puede superar 10MB" };
+  }
+  if (file.type && !ALLOWED_DOCUMENT_TYPES.has(file.type)) {
+    return { error: "Solo se permiten PDF, Word (.doc/.docx) o imágenes (JPG/PNG/WEBP)" };
+  }
+
+  let blobUrl: string;
+  try {
+    const blob = await put(`clients/${clientId}/${Date.now()}-${file.name}`, file, {
+      access: "public",
+    });
+    blobUrl = blob.url;
+  } catch {
+    return { error: "No se pudo subir el archivo" };
+  }
+
+  await prisma.clientDocument.create({
+    data: {
+      clientId,
+      name: file.name,
+      fileUrl: blobUrl,
+      fileType: file.type || null,
+      uploadedById: session?.user?.id,
+    },
+  });
+
+  revalidatePath(`/clients/${clientId}`);
+  return { success: true };
+}
+
+export async function deleteClientDocument(clientId: string, documentId: string) {
+  const document = await prisma.clientDocument.findUnique({ where: { id: documentId } });
+  if (!document) return;
+
+  try {
+    await del(document.fileUrl);
+  } catch {
+    // Blob may already be gone — proceed with removing the record regardless.
+  }
+
+  await prisma.clientDocument.delete({ where: { id: documentId } });
   revalidatePath(`/clients/${clientId}`);
 }

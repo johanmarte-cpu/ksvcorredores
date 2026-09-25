@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatDate } from "@/lib/format";
 import { NoteForm } from "./note-form";
+import { UploadDocumentForm, DocumentList } from "./document-forms";
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -14,6 +15,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     include: {
       contacts: true,
       notes: { orderBy: { createdAt: "desc" }, include: { author: true } },
+      documents: { orderBy: { createdAt: "desc" }, include: { uploadedBy: true } },
       policies: { include: { insurer: true }, orderBy: { createdAt: "desc" } },
       quotes: { orderBy: { createdAt: "desc" } },
     },
@@ -129,6 +131,16 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Documentos del expediente</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <UploadDocumentForm clientId={client.id} />
+          <DocumentList clientId={client.id} documents={client.documents} />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
