@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { FileCheck2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatDate } from "@/lib/format";
@@ -18,6 +20,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       documents: { orderBy: { createdAt: "desc" }, include: { uploadedBy: true } },
       policies: { include: { insurer: true }, orderBy: { createdAt: "desc" } },
       quotes: { orderBy: { createdAt: "desc" } },
+      knowledgeForm: true,
     },
   });
 
@@ -131,6 +134,26 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div className="flex items-center gap-2">
+            <FileCheck2 className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <CardTitle className="text-base">Formulario de Conocimiento</CardTitle>
+              <p className="text-xs text-muted-foreground">Requerido por Ley 155-17 (prevención de lavado de activos)</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={client.knowledgeForm ? "secondary" : "outline"}>
+              {client.knowledgeForm ? "Completado" : "Pendiente"}
+            </Badge>
+            <Button asChild size="sm" variant="outline">
+              <Link href={`/clients/${client.id}/knowledge-form`}>{client.knowledgeForm ? "Editar" : "Completar"}</Link>
+            </Button>
+          </div>
+        </CardHeader>
+      </Card>
 
       <Card>
         <CardHeader>

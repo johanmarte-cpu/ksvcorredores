@@ -79,3 +79,55 @@ export const RENEWAL_STATUS_LABELS: Record<string, string> = {
   LAPSED: "No renovada",
   DECLINED: "Rechazada",
 };
+
+export const THIRD_PARTY_TYPE_LABELS: Record<string, string> = {
+  TOMADOR: "Tomador",
+  ASEGURADO: "Asegurado",
+  BENEFICIARIO: "Beneficiario",
+  AFIANZADO: "Afianzado",
+  PROVEEDOR: "Proveedor",
+  EMPLEADO: "Empleado",
+  APODERADO: "Apoderado",
+};
+
+export const ID_TYPE_LABELS: Record<string, string> = {
+  CEDULA: "Cédula",
+  PASAPORTE: "Pasaporte",
+  ID_RESIDENCIA: "ID residencia",
+};
+
+export const SEX_LABELS: Record<string, string> = {
+  F: "Femenino",
+  M: "Masculino",
+};
+
+export const CORRESPONDENCE_ADDRESS_LABELS: Record<string, string> = {
+  TRABAJO: "Trabajo",
+  CORREO_ELECTRONICO: "Correo electrónico",
+  RESIDENCIA: "Residencia",
+};
+
+export const ECONOMIC_ACTIVITY_LABELS: Record<string, string> = {
+  EMPLEADO_ASALARIADO: "Empleado/Asalariado",
+  PROPIETARIO_SOCIO: "Propietario/Socio",
+  JUBILADO_PENSIONADO: "Jubilado/Pensionado",
+  INVERSIONISTA_PRESTAMISTA: "Inversionista/Prestamista",
+  INDEPENDIENTE: "Independiente",
+  ESTUDIANTE: "Estudiante",
+  AMA_DE_CASA: "Ama de casa",
+  OTRO: "Otro",
+};
+
+export const MONTHLY_INCOME_RANGE_LABELS: Record<string, string> = {
+  UNDER_20K: "Menos de RD$20 mil",
+  FROM_20K_TO_50K: "RD$20 mil a RD$50 mil",
+  FROM_50K_TO_100K: "RD$50 mil a RD$100 mil",
+  OVER_100K: "Más de RD$100 mil",
+};
+
+export const INSURANCE_BRANCH_LABELS: Record<string, string> = {
+  PERSONAS: "Personas",
+  GENERALES: "Generales",
+  FIANZAS: "Fianzas",
+  OTRO: "Otro",
+};

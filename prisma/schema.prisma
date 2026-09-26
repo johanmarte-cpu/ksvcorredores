@@ -27,6 +27,58 @@ enum ClientType {
   COMPANY
 }
 
+enum ThirdPartyType {
+  TOMADOR
+  ASEGURADO
+  BENEFICIARIO
+  AFIANZADO
+  PROVEEDOR
+  EMPLEADO
+  APODERADO
+}
+
+enum IdentificationType {
+  CEDULA
+  PASAPORTE
+  ID_RESIDENCIA
+}
+
+enum Sex {
+  F
+  M
+}
+
+enum CorrespondenceAddress {
+  TRABAJO
+  CORREO_ELECTRONICO
+  RESIDENCIA
+}
+
+enum EconomicActivity {
+  EMPLEADO_ASALARIADO
+  PROPIETARIO_SOCIO
+  JUBILADO_PENSIONADO
+  INVERSIONISTA_PRESTAMISTA
+  INDEPENDIENTE
+  ESTUDIANTE
+  AMA_DE_CASA
+  OTRO
+}
+
+enum MonthlyIncomeRange {
+  UNDER_20K
+  FROM_20K_TO_50K
+  FROM_50K_TO_100K
+  OVER_100K
+}
+
+enum InsuranceBranch {
+  PERSONAS
+  GENERALES
+  FIANZAS
+  OTRO
+}
+
 enum LineOfBusiness {
   AUTO
   LIFE
@@ -141,15 +193,16 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  assignedClients   Client[]        @relation("ClientAssignedTo")
+  assignedClients   Client[]              @relation("ClientAssignedTo")
   clientNotes       ClientNote[]
-  quotesRequested   Quote[]         @relation("QuoteRequestedBy")
+  quotesRequested   Quote[]               @relation("QuoteRequestedBy")
   claimEvents       ClaimEvent[]
-  tasksAssigned     Task[]          @relation("TaskAssignedTo")
-  tasksCreated      Task[]          @relation("TaskCreatedBy")
+  tasksAssigned     Task[]                @relation("TaskAssignedTo")
+  tasksCreated      Task[]                @relation("TaskCreatedBy")
   notifications     Notification[]
   auditLogs         AuditLog[]
   uploadedDocuments ClientDocument[]
+  knowledgeForms    ClientKnowledgeForm[]
 
   @@map("users")
 }
@@ -159,26 +212,27 @@ model User {
 // ─────────────────────────────────────────────────────────────
 
 model Client {
-  id          String     @id @default(cuid())
-  type        ClientType
-  firstName   String? // personas físicas
-  lastName    String?
-  companyName String? // empresas
-  taxId       String     @unique // Cédula/RNC
-  email       String?
-  phone       String?
-  address     String?
-  city        String?
+  id           String     @id @default(cuid())
+  type         ClientType
+  firstName    String? // personas físicas
+  lastName     String?
+  companyName  String? // empresas
+  taxId        String     @unique // Cédula/RNC
+  email        String?
+  phone        String?
+  address      String?
+  city         String?
   assignedToId String?
   assignedTo   User?      @relation("ClientAssignedTo", fields: [assignedToId], references: [id])
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
-  contacts  ClientContact[]
-  documents ClientDocument[]
-  notes     ClientNote[]
-  quotes    Quote[]
-  policies  Policy[]
+  contacts      ClientContact[]
+  documents     ClientDocument[]
+  notes         ClientNote[]
+  quotes        Quote[]
+  policies      Policy[]
+  knowledgeForm ClientKnowledgeForm?
 
   @@map("clients")
 }
@@ -220,6 +274,71 @@ model ClientNote {
   createdAt DateTime @default(now())
 
   @@map("client_notes")
+}
+
+// Formulario de Conocimiento (KYC) — uno por cliente, requerido para
+// cumplimiento de la Ley 155-17 contra el Lavado de Activos.
+model ClientKnowledgeForm {
+  id       String @id @default(cuid())
+  clientId String @unique
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  thirdPartyTypes ThirdPartyType[]
+  branch          String?
+
+  idType           IdentificationType?
+  idNumber         String?
+  idExpirationDate DateTime?
+  sex              Sex?
+  birthDate        DateTime?
+  birthCity        String?
+  birthProvince    String?
+  nationality      String?
+  profession       String?
+  occupation       String?
+  employer         String?
+  employerAddress  String?
+  employerCity     String?
+  employerProvince String?
+  employerPhone    String?
+
+  residenceCity         String?
+  residenceProvince     String?
+  residenceCountry      String?
+  residencePhone        String?
+  residenceCell         String?
+  residenceAddress      String?
+  sector                String?
+  correspondenceAddress CorrespondenceAddress?
+
+  economicActivity      EconomicActivity?
+  economicActivityOther String?
+
+  monthlyIncomeRange     MonthlyIncomeRange?
+  otherIncomeAmount      Decimal?            @db.Decimal(12, 2)
+  otherIncomeDescription String?
+
+  hasManagedPublicFunds       Boolean?
+  hasManagedPublicFundsDetail String?
+  hasHeldPublicOffice         Boolean?
+  hasHeldPublicOfficeDetail   String?
+  isPep                       Boolean?
+  isPepDetail                 String?
+  relativeIsPep               Boolean?
+  relativeIsPepDetail         String?
+
+  insuranceBranch      InsuranceBranch?
+  insuranceBranchOther String?
+
+  verificationDate DateTime?
+  verifierCode     String?
+  completedById    String?
+  completedBy      User?     @relation(fields: [completedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("client_knowledge_forms")
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -278,15 +397,15 @@ model InsurerContact {
 }
 
 model InsurerCommissionRate {
-  id             String          @id @default(cuid())
-  insurerId      String
-  insurer        Insurer         @relation(fields: [insurerId], references: [id], onDelete: Cascade)
-  productId      String?
-  product        InsurerProduct? @relation(fields: [productId], references: [id], onDelete: Cascade)
-  percentage     Decimal         @db.Decimal(5, 2)
-  effectiveFrom  DateTime
-  effectiveTo    DateTime?
-  notes          String?
+  id            String          @id @default(cuid())
+  insurerId     String
+  insurer       Insurer         @relation(fields: [insurerId], references: [id], onDelete: Cascade)
+  productId     String?
+  product       InsurerProduct? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  percentage    Decimal         @db.Decimal(5, 2)
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  notes         String?
 
   @@map("insurer_commission_rates")
 }
@@ -319,23 +438,23 @@ model Quote {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
-  requests       QuoteRequest[]
-  documents      QuoteDocument[]
+  requests        QuoteRequest[]
+  documents       QuoteDocument[]
   convertedPolicy Policy?
 
   @@map("quotes")
 }
 
 model QuoteRequest {
-  id         String              @id @default(cuid())
-  quoteId    String
-  quote      Quote               @relation(fields: [quoteId], references: [id], onDelete: Cascade)
-  insurerId  String
-  insurer    Insurer             @relation(fields: [insurerId], references: [id])
-  productId  String?
-  product    InsurerProduct?     @relation(fields: [productId], references: [id])
-  status     QuoteRequestStatus  @default(PENDING)
-  sentAt     DateTime?
+  id          String             @id @default(cuid())
+  quoteId     String
+  quote       Quote              @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  insurerId   String
+  insurer     Insurer            @relation(fields: [insurerId], references: [id])
+  productId   String?
+  product     InsurerProduct?    @relation(fields: [productId], references: [id])
+  status      QuoteRequestStatus @default(PENDING)
+  sentAt      DateTime?
   respondedAt DateTime?
 
   option QuoteOption?
@@ -344,16 +463,16 @@ model QuoteRequest {
 }
 
 model QuoteOption {
-  id             String       @id @default(cuid())
-  quoteRequestId String       @unique
-  quoteRequest   QuoteRequest @relation(fields: [quoteRequestId], references: [id], onDelete: Cascade)
-  premium        Decimal      @db.Decimal(12, 2)
+  id              String       @id @default(cuid())
+  quoteRequestId  String       @unique
+  quoteRequest    QuoteRequest @relation(fields: [quoteRequestId], references: [id], onDelete: Cascade)
+  premium         Decimal      @db.Decimal(12, 2)
   coverageSummary String?
-  deductible     Decimal?     @db.Decimal(12, 2)
-  termMonths     Int          @default(12)
-  isSelected     Boolean      @default(false)
-  notes          String?
-  createdAt      DateTime     @default(now())
+  deductible      Decimal?     @db.Decimal(12, 2)
+  termMonths      Int          @default(12)
+  isSelected      Boolean      @default(false)
+  notes           String?
+  createdAt       DateTime     @default(now())
 
   @@map("quote_options")
 }
@@ -374,34 +493,34 @@ model QuoteDocument {
 // ─────────────────────────────────────────────────────────────
 
 model Policy {
-  id                    String           @id @default(cuid())
-  policyNumber          String           @unique
-  clientId              String
-  client                Client           @relation(fields: [clientId], references: [id])
-  insurerId             String
-  insurer               Insurer          @relation(fields: [insurerId], references: [id])
-  productId             String
-  product               InsurerProduct   @relation(fields: [productId], references: [id])
-  quoteId               String?          @unique
-  quote                 Quote?           @relation(fields: [quoteId], references: [id])
-  premium               Decimal          @db.Decimal(12, 2)
-  itbisAmount           Decimal          @db.Decimal(12, 2)
-  totalAmount           Decimal          @db.Decimal(12, 2)
-  commissionPercentage  Decimal          @db.Decimal(5, 2)
-  commissionAmount      Decimal          @db.Decimal(12, 2)
-  paymentFrequency      PaymentFrequency @default(ANNUAL)
-  startDate             DateTime
-  endDate               DateTime
-  status                PolicyStatus     @default(ACTIVE)
-  renewalType            RenewalType     @default(MANUAL)
-  createdAt             DateTime         @default(now())
-  updatedAt              DateTime        @updatedAt
+  id                   String           @id @default(cuid())
+  policyNumber         String           @unique
+  clientId             String
+  client               Client           @relation(fields: [clientId], references: [id])
+  insurerId            String
+  insurer              Insurer          @relation(fields: [insurerId], references: [id])
+  productId            String
+  product              InsurerProduct   @relation(fields: [productId], references: [id])
+  quoteId              String?          @unique
+  quote                Quote?           @relation(fields: [quoteId], references: [id])
+  premium              Decimal          @db.Decimal(12, 2)
+  itbisAmount          Decimal          @db.Decimal(12, 2)
+  totalAmount          Decimal          @db.Decimal(12, 2)
+  commissionPercentage Decimal          @db.Decimal(5, 2)
+  commissionAmount     Decimal          @db.Decimal(12, 2)
+  paymentFrequency     PaymentFrequency @default(ANNUAL)
+  startDate            DateTime
+  endDate              DateTime
+  status               PolicyStatus     @default(ACTIVE)
+  renewalType          RenewalType      @default(MANUAL)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
 
   documents   PolicyDocument[]
   payments    PolicyPayment[]
   commissions PolicyCommission[]
-  renewals    PolicyRenewal[]   @relation("RenewalOfPolicy")
-  renewedInto PolicyRenewal[]   @relation("RenewalNewPolicy")
+  renewals    PolicyRenewal[]    @relation("RenewalOfPolicy")
+  renewedInto PolicyRenewal[]    @relation("RenewalNewPolicy")
   claims      Claim[]
 
   @@index([endDate])
@@ -435,36 +554,36 @@ model PolicyPayment {
 }
 
 model PolicyCommission {
-  id             String            @id @default(cuid())
+  id             String           @id @default(cuid())
   policyId       String
-  policy         Policy            @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  policy         Policy           @relation(fields: [policyId], references: [id], onDelete: Cascade)
   period         String // e.g. "2026-09"
-  expectedAmount Decimal           @db.Decimal(12, 2)
-  receivedAmount Decimal?          @db.Decimal(12, 2)
+  expectedAmount Decimal          @db.Decimal(12, 2)
+  receivedAmount Decimal?         @db.Decimal(12, 2)
   receivedDate   DateTime?
-  status         CommissionStatus  @default(EXPECTED)
+  status         CommissionStatus @default(EXPECTED)
   notes          String?
-  createdAt      DateTime          @default(now())
+  createdAt      DateTime         @default(now())
 
   @@map("policy_commissions")
 }
 
 model PolicyRenewal {
-  id             String        @id @default(cuid())
-  policyId       String
-  policy         Policy        @relation("RenewalOfPolicy", fields: [policyId], references: [id], onDelete: Cascade)
-  dueDate        DateTime
-  status         RenewalStatus @default(PENDING)
-  alert60SentAt  DateTime?
-  alert30SentAt  DateTime?
-  alert15SentAt  DateTime?
-  newPolicyId    String?
-  newPolicy      Policy?       @relation("RenewalNewPolicy", fields: [newPolicyId], references: [id])
-  taskId         String?       @unique
-  task           Task?         @relation(fields: [taskId], references: [id])
-  notes          String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id            String        @id @default(cuid())
+  policyId      String
+  policy        Policy        @relation("RenewalOfPolicy", fields: [policyId], references: [id], onDelete: Cascade)
+  dueDate       DateTime
+  status        RenewalStatus @default(PENDING)
+  alert60SentAt DateTime?
+  alert30SentAt DateTime?
+  alert15SentAt DateTime?
+  newPolicyId   String?
+  newPolicy     Policy?       @relation("RenewalNewPolicy", fields: [newPolicyId], references: [id])
+  taskId        String?       @unique
+  task          Task?         @relation(fields: [taskId], references: [id])
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   @@map("policy_renewals")
 }
@@ -520,18 +639,18 @@ model ClaimEvent {
 // ─────────────────────────────────────────────────────────────
 
 model Task {
-  id             String        @id @default(cuid())
-  title          String
-  description    String?
-  dueDate        DateTime?
-  assignedToId   String?
-  assignedTo     User?         @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
-  createdById    String?
-  createdBy      User?         @relation("TaskCreatedBy", fields: [createdById], references: [id])
-  status         TaskStatus    @default(PENDING)
-  priority       TaskPriority  @default(MEDIUM)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id           String       @id @default(cuid())
+  title        String
+  description  String?
+  dueDate      DateTime?
+  assignedToId String?
+  assignedTo   User?        @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
+  createdById  String?
+  createdBy    User?        @relation("TaskCreatedBy", fields: [createdById], references: [id])
+  status       TaskStatus   @default(PENDING)
+  priority     TaskPriority @default(MEDIUM)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   renewal PolicyRenewal?
 
