@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { requiredString } from "@/lib/validation";
 import { buildPaymentSchedule } from "@/lib/payment-schedule";
+import { calculateItbis } from "@/lib/tax";
 
 const quoteSchema = z.object({
   clientId: requiredString("Selecciona un cliente"),
@@ -166,8 +167,9 @@ export async function convertQuoteToPolicy(_prevState: { error?: string } | unde
 
   const premium = Number(request.option.premium);
   const commissionAmount = (premium * parsed.data.commissionPercentage) / 100;
+  const { itbisAmount, totalAmount } = calculateItbis(premium);
   const startDate = new Date(parsed.data.startDate);
-  const schedule = buildPaymentSchedule(premium, parsed.data.paymentFrequency, startDate);
+  const schedule = buildPaymentSchedule(totalAmount, parsed.data.paymentFrequency, startDate);
 
   let policyId: string;
   try {
@@ -180,6 +182,8 @@ export async function convertQuoteToPolicy(_prevState: { error?: string } | unde
           productId: request.productId!,
           quoteId: request.quoteId,
           premium,
+          itbisAmount,
+          totalAmount,
           commissionPercentage: parsed.data.commissionPercentage,
           commissionAmount,
           paymentFrequency: parsed.data.paymentFrequency,

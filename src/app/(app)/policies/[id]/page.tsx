@@ -48,8 +48,13 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
         <Badge variant="outline">{POLICY_STATUS_LABELS[policy.status]}</Badge>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
         <InfoCard label="Prima" value={formatCurrency(policy.premium.toString())} />
+        <InfoCard label="ITBIS (16%)" value={formatCurrency(policy.itbisAmount.toString())} />
+        <InfoCard label="Total" value={formatCurrency(policy.totalAmount.toString())} emphasis />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
         <InfoCard label="Comisión" value={`${policy.commissionPercentage}% · ${formatCurrency(policy.commissionAmount.toString())}`} />
         <InfoCard label="Forma de pago" value={PAYMENT_FREQUENCY_LABELS[policy.paymentFrequency]} />
         <InfoCard label="Vigencia" value={`${formatDate(policy.startDate)} → ${formatDate(policy.endDate)}`} />
@@ -195,12 +200,12 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
   );
 }
 
-function InfoCard({ label, value }: { label: string; value: string }) {
+function InfoCard({ label, value, emphasis }: { label: string; value: string; emphasis?: boolean }) {
   return (
-    <Card>
+    <Card className={emphasis ? "border-primary" : undefined}>
       <CardContent className="p-4">
         <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="mt-1 text-sm font-semibold">{value}</p>
+        <p className={emphasis ? "mt-1 text-lg font-semibold text-primary" : "mt-1 text-sm font-semibold"}>{value}</p>
       </CardContent>
     </Card>
   );

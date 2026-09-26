@@ -80,7 +80,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
                     {request.option.isSelected ? (
                       <>
                         <Badge>Seleccionada</Badge>
-                        <ConvertDialog quoteId={quote.id} quoteRequestId={request.id} />
+                        <ConvertDialog quoteId={quote.id} quoteRequestId={request.id} premium={Number(request.option.premium)} />
                       </>
                     ) : (
                       !hasSelected && <SelectOptionButton quoteId={quote.id} quoteOptionId={request.option.id} />

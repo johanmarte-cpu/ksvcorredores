@@ -16,6 +16,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createPolicy } from "./actions";
 import { PAYMENT_FREQUENCY_LABELS } from "@/lib/labels";
+import { calculateItbis } from "@/lib/tax";
+import { formatCurrency } from "@/lib/format";
 
 type Insurer = { id: string; name: string; products: { id: string; name: string }[] };
 
@@ -28,9 +30,11 @@ export function NewPolicyDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [insurerId, setInsurerId] = useState("");
+  const [premium, setPremium] = useState("");
   const [state, formAction, pending] = useActionState(createPolicy, undefined);
   const products = insurers.find((i) => i.id === insurerId)?.products ?? [];
   const insurerHasNoProducts = insurerId !== "" && products.length === 0;
+  const { itbisAmount, totalAmount } = calculateItbis(Number(premium) || 0);
 
   const [today] = useState(() => new Date().toISOString().slice(0, 10));
   const [nextYear] = useState(() => new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
@@ -106,11 +110,34 @@ export function NewPolicyDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="premium">Prima</Label>
-              <Input id="premium" name="premium" type="number" step="0.01" min="0" required />
+              <Input
+                id="premium"
+                name="premium"
+                type="number"
+                step="0.01"
+                min="0"
+                required
+                value={premium}
+                onChange={(e) => setPremium(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="commissionPercentage">% Comisión</Label>
               <Input id="commissionPercentage" name="commissionPercentage" type="number" step="0.01" min="0" max="100" required />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-3 rounded-md border bg-muted/40 p-3 text-sm">
+            <div>
+              <p className="text-xs text-muted-foreground">Prima</p>
+              <p className="font-medium">{formatCurrency(Number(premium) || 0)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">ITBIS (16%)</p>
+              <p className="font-medium">{formatCurrency(itbisAmount)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="font-semibold">{formatCurrency(totalAmount)}</p>
             </div>
           </div>
           <div className="space-y-2">

@@ -34,6 +34,8 @@ export default async function PoliciesPage() {
                 <TableHead>Aseguradora</TableHead>
                 <TableHead>Producto</TableHead>
                 <TableHead>Prima</TableHead>
+                <TableHead>ITBIS</TableHead>
+                <TableHead>Total</TableHead>
                 <TableHead>Vence</TableHead>
                 <TableHead>Estado</TableHead>
               </TableRow>
@@ -41,7 +43,7 @@ export default async function PoliciesPage() {
             <TableBody>
               {policies.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
                     Aún no hay pólizas registradas.
                   </TableCell>
                 </TableRow>
@@ -57,6 +59,8 @@ export default async function PoliciesPage() {
                   <TableCell>{p.insurer.name}</TableCell>
                   <TableCell>{p.product.name}</TableCell>
                   <TableCell>{formatCurrency(p.premium.toString())}</TableCell>
+                  <TableCell className="text-muted-foreground">{formatCurrency(p.itbisAmount.toString())}</TableCell>
+                  <TableCell className="font-medium">{formatCurrency(p.totalAmount.toString())}</TableCell>
                   <TableCell>{formatDate(p.endDate)}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{POLICY_STATUS_LABELS[p.status]}</Badge>

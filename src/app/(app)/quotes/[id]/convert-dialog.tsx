@@ -15,18 +15,23 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { convertQuoteToPolicy } from "../actions";
 import { PAYMENT_FREQUENCY_LABELS } from "@/lib/labels";
+import { calculateItbis } from "@/lib/tax";
+import { formatCurrency } from "@/lib/format";
 
 export function ConvertDialog({
   quoteId,
   quoteRequestId,
+  premium,
   defaultCommissionPercentage,
 }: {
   quoteId: string;
   quoteRequestId: string;
+  premium: number;
   defaultCommissionPercentage?: number;
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(convertQuoteToPolicy, undefined);
+  const { itbisAmount, totalAmount } = calculateItbis(premium);
 
   const [today] = useState(() => new Date().toISOString().slice(0, 10));
   const [nextYear] = useState(() => new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
@@ -46,6 +51,20 @@ export function ConvertDialog({
           <div className="space-y-2">
             <Label htmlFor="policyNumber">Número de póliza</Label>
             <Input id="policyNumber" name="policyNumber" required />
+          </div>
+          <div className="grid grid-cols-3 gap-3 rounded-md border bg-muted/40 p-3 text-sm">
+            <div>
+              <p className="text-xs text-muted-foreground">Prima</p>
+              <p className="font-medium">{formatCurrency(premium)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">ITBIS (16%)</p>
+              <p className="font-medium">{formatCurrency(itbisAmount)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="font-semibold">{formatCurrency(totalAmount)}</p>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
