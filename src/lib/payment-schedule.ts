@@ -1,4 +1,4 @@
-export const DOWN_PAYMENT_RATE = 0.25;
+export const DEFAULT_DOWN_PAYMENT_RATE = 25;
 
 /** Splits `amount` into `count` installments, `monthsStep` months apart, starting at startDate. */
 export function buildInstallments(amount: number, count: number, startDate: Date, monthsStep: number) {
@@ -18,19 +18,25 @@ export function buildInstallments(amount: number, count: number, startDate: Date
   return installments;
 }
 
-/** The upfront down payment ("Inicial"): always 25% of the premium (before ITBIS). */
-export function calculateDownPayment(premium: number) {
-  return Math.round(premium * DOWN_PAYMENT_RATE * 100) / 100;
+/** The upfront down payment ("Inicial"): a configurable % of the premium (before ITBIS). */
+export function calculateDownPayment(premium: number, ratePercent: number = DEFAULT_DOWN_PAYMENT_RATE) {
+  return Math.round(premium * (ratePercent / 100) * 100) / 100;
 }
 
 /**
- * Builds a policy's "acuerdo de pago": an upfront Inicial (25% of the premium),
+ * Builds a policy's "acuerdo de pago": an upfront Inicial (configurable % of the premium),
  * followed by the remaining balance split into `installments` equal monthly
  * quotas chosen by the broker — independent of the policy's contractual
  * payment frequency.
  */
-export function buildPaymentSchedule(premium: number, total: number, installments: number, startDate: Date) {
-  const downPayment = calculateDownPayment(premium);
+export function buildPaymentSchedule(
+  premium: number,
+  total: number,
+  installments: number,
+  startDate: Date,
+  downPaymentRatePercent: number = DEFAULT_DOWN_PAYMENT_RATE,
+) {
+  const downPayment = calculateDownPayment(premium, downPaymentRatePercent);
   const balance = Math.round((total - downPayment) * 100) / 100;
 
   const balanceStart = new Date(startDate);

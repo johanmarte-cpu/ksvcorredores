@@ -5,23 +5,30 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatCurrency, formatDate } from "@/lib/format";
 import { POLICY_STATUS_LABELS } from "@/lib/labels";
+import { getSettings } from "@/lib/settings";
 import { NewPolicyDialog } from "./new-policy-dialog";
 
 export default async function PoliciesPage() {
-  const [policies, clients, insurers] = await Promise.all([
+  const [policies, clients, insurers, settings] = await Promise.all([
     prisma.policy.findMany({
       orderBy: { createdAt: "desc" },
       include: { client: true, insurer: true, product: true },
     }),
     prisma.client.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.insurer.findMany({ where: { active: true }, include: { products: true }, orderBy: { name: "asc" } }),
+    getSettings(),
   ]);
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Pólizas</h1>
-        <NewPolicyDialog clients={clients.map((c) => ({ id: c.id, name: clientDisplayName(c) }))} insurers={insurers} />
+        <NewPolicyDialog
+          clients={clients.map((c) => ({ id: c.id, name: clientDisplayName(c) }))}
+          insurers={insurers}
+          itbisRate={Number(settings.itbisRate)}
+          downPaymentRate={Number(settings.downPaymentRate)}
+        />
       </div>
 
       <Card>

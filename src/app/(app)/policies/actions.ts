@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requiredString } from "@/lib/validation";
 import { buildPaymentSchedule, buildCustomInstallments } from "@/lib/payment-schedule";
 import { calculateItbis } from "@/lib/tax";
+import { getSettings } from "@/lib/settings";
 
 const policySchema = z.object({
   clientId: requiredString("Selecciona un cliente"),
@@ -36,10 +37,17 @@ export async function createPolicy(_prevState: { error?: string } | undefined, f
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
 
+  const settings = await getSettings();
   const commissionAmount = (parsed.data.premium * parsed.data.commissionPercentage) / 100;
-  const { itbisAmount, totalAmount } = calculateItbis(parsed.data.premium);
+  const { itbisAmount, totalAmount } = calculateItbis(parsed.data.premium, Number(settings.itbisRate));
   const startDate = new Date(parsed.data.startDate);
-  const schedule = buildPaymentSchedule(parsed.data.premium, totalAmount, parsed.data.installments, startDate);
+  const schedule = buildPaymentSchedule(
+    parsed.data.premium,
+    totalAmount,
+    parsed.data.installments,
+    startDate,
+    Number(settings.downPaymentRate),
+  );
 
   let policyId: string;
   try {

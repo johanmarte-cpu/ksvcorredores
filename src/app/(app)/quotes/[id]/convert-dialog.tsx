@@ -23,18 +23,22 @@ export function ConvertDialog({
   quoteId,
   quoteRequestId,
   premium,
+  itbisRate,
+  downPaymentRate,
   defaultCommissionPercentage,
 }: {
   quoteId: string;
   quoteRequestId: string;
   premium: number;
+  itbisRate: number;
+  downPaymentRate: number;
   defaultCommissionPercentage?: number;
 }) {
   const [open, setOpen] = useState(false);
   const [installments, setInstallments] = useState(1);
   const [state, formAction, pending] = useActionState(convertQuoteToPolicy, undefined);
-  const { itbisAmount, totalAmount } = calculateItbis(premium);
-  const downPayment = calculateDownPayment(premium);
+  const { itbisAmount, totalAmount } = calculateItbis(premium, itbisRate);
+  const downPayment = calculateDownPayment(premium, downPaymentRate);
   const balance = totalAmount - downPayment;
   const installmentPreview = installments > 0 ? balance / installments : 0;
 
@@ -63,7 +67,7 @@ export function ConvertDialog({
               <p className="font-medium">{formatCurrency(premium)}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">ITBIS (16%)</p>
+              <p className="text-xs text-muted-foreground">ITBIS ({itbisRate}%)</p>
               <p className="font-medium">{formatCurrency(itbisAmount)}</p>
             </div>
             <div>
@@ -73,7 +77,7 @@ export function ConvertDialog({
           </div>
           <div className="space-y-2 rounded-md border bg-muted/40 p-3">
             <p className="text-xs text-muted-foreground">
-              Inicial (25% de la prima): <span className="font-medium text-foreground">{formatCurrency(downPayment)}</span>
+              Inicial ({downPaymentRate}% de la prima): <span className="font-medium text-foreground">{formatCurrency(downPayment)}</span>
             </p>
             <div className="space-y-1">
               <Label htmlFor="installments">Cuotas para el restante</Label>

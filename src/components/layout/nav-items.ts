@@ -9,6 +9,7 @@ import {
   Building2,
   UserCog,
   BarChart3,
+  Settings,
 } from "lucide-react";
 
 import type { LucideIcon } from "lucide-react";
@@ -26,4 +27,5 @@ export const navItems: NavItem[] = [
   { href: "/reports", label: "Reportes", icon: BarChart3 },
   { href: "/insurers", label: "Aseguradoras", icon: Building2 },
   { href: "/users", label: "Usuarios", icon: UserCog, adminOnly: true },
+  { href: "/settings", label: "Configuración", icon: Settings, adminOnly: true },
 ];

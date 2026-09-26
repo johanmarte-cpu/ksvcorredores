@@ -8,6 +8,7 @@ import { auth } from "@/auth";
 import { requiredString } from "@/lib/validation";
 import { buildPaymentSchedule } from "@/lib/payment-schedule";
 import { calculateItbis } from "@/lib/tax";
+import { getSettings } from "@/lib/settings";
 
 const quoteSchema = z.object({
   clientId: requiredString("Selecciona un cliente"),
@@ -167,11 +168,18 @@ export async function convertQuoteToPolicy(_prevState: { error?: string } | unde
     return { error: "Esta solicitud no tiene una propuesta registrada o producto asociado" };
   }
 
+  const settings = await getSettings();
   const premium = Number(request.option.premium);
   const commissionAmount = (premium * parsed.data.commissionPercentage) / 100;
-  const { itbisAmount, totalAmount } = calculateItbis(premium);
+  const { itbisAmount, totalAmount } = calculateItbis(premium, Number(settings.itbisRate));
   const startDate = new Date(parsed.data.startDate);
-  const schedule = buildPaymentSchedule(premium, totalAmount, parsed.data.installments, startDate);
+  const schedule = buildPaymentSchedule(
+    premium,
+    totalAmount,
+    parsed.data.installments,
+    startDate,
+    Number(settings.downPaymentRate),
+  );
 
   let policyId: string;
   try {

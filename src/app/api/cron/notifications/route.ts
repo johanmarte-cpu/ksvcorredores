@@ -3,9 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { paymentReminderEmail, renewalNoticeEmail, birthdayEmail } from "@/lib/notification-templates";
 import { clientDisplayName } from "@/lib/format";
-
-const PAYMENT_REMINDER_DAYS = 3;
-const RENEWAL_NOTICE_DAYS = 30;
+import { getSettings } from "@/lib/settings";
 
 // Policy/payment dates are date-only values stored as UTC midnight (see src/lib/format.ts).
 // This must compute "N days from now" the same way — in UTC — or the match drifts by a
@@ -23,10 +21,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const settings = await getSettings();
   const results = { paymentReminders: 0, renewalNotices: 0, birthdays: 0, errors: [] as string[] };
 
-  // ── Recordatorios de pago (3 días antes del vencimiento) ──
-  const paymentRange = dayRange(PAYMENT_REMINDER_DAYS);
+  // ── Recordatorios de pago ──
+  const paymentRange = dayRange(settings.paymentReminderDays);
   const duePayments = await prisma.policyPayment.findMany({
     where: {
       status: "PENDING",
@@ -47,6 +46,7 @@ export async function GET(request: NextRequest) {
           policyNumber: payment.policy.policyNumber,
           amount: Number(payment.amount),
           dueDate: payment.dueDate,
+          companyName: settings.companyName,
         }),
       });
       await prisma.policyPayment.update({ where: { id: payment.id }, data: { reminderSentAt: new Date() } });
@@ -56,8 +56,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // ── Aviso de renovación (30 días antes del vencimiento) ──
-  const renewalRange = dayRange(RENEWAL_NOTICE_DAYS);
+  // ── Aviso de renovación ──
+  const renewalRange = dayRange(settings.renewalNoticeDays);
   const expiringPolicies = await prisma.policy.findMany({
     where: {
       status: "ACTIVE",
@@ -77,6 +77,7 @@ export async function GET(request: NextRequest) {
           policyNumber: policy.policyNumber,
           insurerName: policy.insurer.name,
           endDate: policy.endDate,
+          companyName: settings.companyName,
         }),
       });
       await prisma.policy.update({ where: { id: policy.id }, data: { renewalNoticeSentAt: new Date() } });
@@ -99,8 +100,8 @@ export async function GET(request: NextRequest) {
     try {
       await sendEmail({
         to: client.email,
-        subject: "¡Feliz cumpleaños de parte de KSV Corredores de Seguros!",
-        html: birthdayEmail({ clientName: clientDisplayName(client) }),
+        subject: `¡Feliz cumpleaños de parte de ${settings.companyName}!`,
+        html: birthdayEmail({ clientName: clientDisplayName(client), companyName: settings.companyName }),
       });
       await prisma.client.update({ where: { id: client.id }, data: { lastBirthdayEmailYear: currentYear } });
       results.birthdays++;

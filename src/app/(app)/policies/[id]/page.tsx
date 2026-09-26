@@ -44,7 +44,10 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
         <InfoCard label="Prima" value={formatCurrency(policy.premium.toString())} />
-        <InfoCard label="ITBIS (16%)" value={formatCurrency(policy.itbisAmount.toString())} />
+        <InfoCard
+          label={`ITBIS (${((Number(policy.itbisAmount) / Number(policy.premium)) * 100).toFixed(0)}%)`}
+          value={formatCurrency(policy.itbisAmount.toString())}
+        />
         <InfoCard label="Total" value={formatCurrency(policy.totalAmount.toString())} emphasis />
       </div>
 

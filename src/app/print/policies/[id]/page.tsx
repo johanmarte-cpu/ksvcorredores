@@ -3,21 +3,29 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatCurrency, formatDate } from "@/lib/format";
 import { PAYMENT_FREQUENCY_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/labels";
+import { getSettings } from "@/lib/settings";
 import { PrintTrigger } from "./print-trigger";
 
 export default async function PrintPaymentAgreementPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const policy = await prisma.policy.findUnique({
-    where: { id },
-    include: {
-      client: true,
-      insurer: true,
-      product: true,
-      payments: { orderBy: { dueDate: "asc" } },
-    },
-  });
+  const [policy, settings] = await Promise.all([
+    prisma.policy.findUnique({
+      where: { id },
+      include: {
+        client: true,
+        insurer: true,
+        product: true,
+        payments: { orderBy: { dueDate: "asc" } },
+      },
+    }),
+    getSettings(),
+  ]);
 
   if (!policy) notFound();
+
+  const companyContact = [settings.companyTaxId && `RNC ${settings.companyTaxId}`, settings.companyPhone, settings.companyEmail]
+    .filter(Boolean)
+    .join(" · ");
 
   const totalPaid = policy.payments.filter((p) => p.status === "PAID").reduce((sum, p) => sum + Number(p.amount), 0);
   const totalPending = Number(policy.totalAmount) - totalPaid;
@@ -72,7 +80,9 @@ export default async function PrintPaymentAgreementPage({ params }: { params: Pr
           <p className="font-medium">{formatCurrency(policy.premium.toString())}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500">ITBIS (16%)</p>
+          <p className="text-xs text-gray-500">
+            ITBIS ({((Number(policy.itbisAmount) / Number(policy.premium)) * 100).toFixed(0)}%)
+          </p>
           <p className="font-medium">{formatCurrency(policy.itbisAmount.toString())}</p>
         </div>
         <div>
@@ -117,9 +127,16 @@ export default async function PrintPaymentAgreementPage({ params }: { params: Pr
       </section>
 
       <p className="mt-8 text-xs text-gray-500">
-        Este documento resume el acuerdo de pago entre el cliente y KSV Corredores de Seguros para la póliza indicada arriba. El
+        Este documento resume el acuerdo de pago entre el cliente y {settings.companyName} para la póliza indicada arriba. El
         incumplimiento de las fechas de pago puede afectar la vigencia de la cobertura según los términos de la aseguradora.
       </p>
+      {(companyContact || settings.companyAddress) && (
+        <p className="mt-2 text-xs text-gray-400">
+          {settings.companyName}
+          {companyContact && ` · ${companyContact}`}
+          {settings.companyAddress && ` · ${settings.companyAddress}`}
+        </p>
+      )}
 
       <section className="mt-16 grid grid-cols-2 gap-12 text-sm">
         <div>

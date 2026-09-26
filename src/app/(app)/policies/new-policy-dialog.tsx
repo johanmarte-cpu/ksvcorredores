@@ -25,9 +25,13 @@ type Insurer = { id: string; name: string; products: { id: string; name: string 
 export function NewPolicyDialog({
   clients,
   insurers,
+  itbisRate,
+  downPaymentRate,
 }: {
   clients: { id: string; name: string }[];
   insurers: Insurer[];
+  itbisRate: number;
+  downPaymentRate: number;
 }) {
   const [open, setOpen] = useState(false);
   const [insurerId, setInsurerId] = useState("");
@@ -36,8 +40,8 @@ export function NewPolicyDialog({
   const [state, formAction, pending] = useActionState(createPolicy, undefined);
   const products = insurers.find((i) => i.id === insurerId)?.products ?? [];
   const insurerHasNoProducts = insurerId !== "" && products.length === 0;
-  const { itbisAmount, totalAmount } = calculateItbis(Number(premium) || 0);
-  const downPayment = calculateDownPayment(Number(premium) || 0);
+  const { itbisAmount, totalAmount } = calculateItbis(Number(premium) || 0, itbisRate);
+  const downPayment = calculateDownPayment(Number(premium) || 0, downPaymentRate);
   const balance = totalAmount - downPayment;
   const installmentPreview = installments > 0 ? balance / installments : 0;
 
@@ -137,7 +141,7 @@ export function NewPolicyDialog({
               <p className="font-medium">{formatCurrency(Number(premium) || 0)}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">ITBIS (16%)</p>
+              <p className="text-xs text-muted-foreground">ITBIS ({itbisRate}%)</p>
               <p className="font-medium">{formatCurrency(itbisAmount)}</p>
             </div>
             <div>
@@ -147,7 +151,7 @@ export function NewPolicyDialog({
           </div>
           <div className="space-y-2 rounded-md border bg-muted/40 p-3">
             <p className="text-xs text-muted-foreground">
-              Inicial (25% de la prima): <span className="font-medium text-foreground">{formatCurrency(downPayment)}</span>
+              Inicial ({downPaymentRate}% de la prima): <span className="font-medium text-foreground">{formatCurrency(downPayment)}</span>
             </p>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">

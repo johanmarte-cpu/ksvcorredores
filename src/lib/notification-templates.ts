@@ -6,8 +6,9 @@ export function paymentReminderEmail(params: {
   policyNumber: string;
   amount: number;
   dueDate: Date;
+  companyName: string;
 }) {
-  const { clientName, policyNumber, amount, dueDate } = params;
+  const { clientName, policyNumber, amount, dueDate, companyName } = params;
   return emailShell(
     "Recordatorio de pago",
     `
@@ -25,6 +26,7 @@ export function paymentReminderEmail(params: {
     </table>
     <p>Si ya realizaste este pago, puedes ignorar este mensaje. Cualquier duda, contáctanos.</p>
     `,
+    companyName,
   );
 }
 
@@ -33,8 +35,9 @@ export function renewalNoticeEmail(params: {
   policyNumber: string;
   insurerName: string;
   endDate: Date;
+  companyName: string;
 }) {
-  const { clientName, policyNumber, insurerName, endDate } = params;
+  const { clientName, policyNumber, insurerName, endDate, companyName } = params;
   return emailShell(
     "Tu póliza está próxima a vencer",
     `
@@ -42,17 +45,19 @@ export function renewalNoticeEmail(params: {
     <p>Tu póliza <strong>${policyNumber}</strong> con <strong>${insurerName}</strong> vence el <strong>${formatDate(endDate)}</strong>.</p>
     <p>Nos pondremos en contacto contigo para gestionar la renovación. Si tienes alguna pregunta, escríbenos.</p>
     `,
+    companyName,
   );
 }
 
-export function birthdayEmail(params: { clientName: string }) {
-  const { clientName } = params;
+export function birthdayEmail(params: { clientName: string; companyName: string }) {
+  const { clientName, companyName } = params;
   return emailShell(
     "¡Feliz cumpleaños! 🎉",
     `
     <p>Hola ${clientName},</p>
-    <p>Todo el equipo de <strong>KSV Corredores de Seguros</strong> te desea un muy feliz cumpleaños.</p>
+    <p>Todo el equipo de <strong>${companyName}</strong> te desea un muy feliz cumpleaños.</p>
     <p style="color:${BRAND_GREEN}; font-weight:bold;">¡Gracias por confiar en nosotros!</p>
     `,
+    companyName,
   );
 }

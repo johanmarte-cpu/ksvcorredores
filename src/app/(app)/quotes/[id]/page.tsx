@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatCurrency, formatDate } from "@/lib/format";
 import { LOB_LABELS, QUOTE_STATUS_LABELS, QUOTE_REQUEST_STATUS_LABELS } from "@/lib/labels";
+import { getSettings } from "@/lib/settings";
 import { SendRequestForm } from "./send-request-form";
 import { RegisterOptionDialog } from "./register-option-dialog";
 import { SelectOptionButton } from "./select-option-button";
@@ -24,11 +25,14 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
 
   if (!quote) notFound();
 
-  const insurers = await prisma.insurer.findMany({
-    where: { active: true },
-    include: { products: { where: { lineOfBusiness: quote.lineOfBusiness } } },
-    orderBy: { name: "asc" },
-  });
+  const [insurers, settings] = await Promise.all([
+    prisma.insurer.findMany({
+      where: { active: true },
+      include: { products: { where: { lineOfBusiness: quote.lineOfBusiness } } },
+      orderBy: { name: "asc" },
+    }),
+    getSettings(),
+  ]);
 
   const hasSelected = quote.requests.some((r) => r.option?.isSelected);
 
@@ -80,7 +84,13 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
                     {request.option.isSelected ? (
                       <>
                         <Badge>Seleccionada</Badge>
-                        <ConvertDialog quoteId={quote.id} quoteRequestId={request.id} premium={Number(request.option.premium)} />
+                        <ConvertDialog
+                          quoteId={quote.id}
+                          quoteRequestId={request.id}
+                          premium={Number(request.option.premium)}
+                          itbisRate={Number(settings.itbisRate)}
+                          downPaymentRate={Number(settings.downPaymentRate)}
+                        />
                       </>
                     ) : (
                       !hasSelected && <SelectOptionButton quoteId={quote.id} quoteOptionId={request.option.id} />
