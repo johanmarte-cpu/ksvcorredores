@@ -8,6 +8,7 @@ import {
   Percent,
   Building2,
   UserCog,
+  BarChart3,
 } from "lucide-react";
 
 import type { LucideIcon } from "lucide-react";
@@ -22,6 +23,7 @@ export const navItems: NavItem[] = [
   { href: "/renewals", label: "Renovaciones", icon: RefreshCw },
   { href: "/claims", label: "Reclamaciones", icon: AlertTriangle },
   { href: "/commissions", label: "Comisiones", icon: Percent },
+  { href: "/reports", label: "Reportes", icon: BarChart3 },
   { href: "/insurers", label: "Aseguradoras", icon: Building2 },
   { href: "/users", label: "Usuarios", icon: UserCog, adminOnly: true },
 ];
