@@ -758,6 +758,10 @@ model SystemSettings {
   notifyRenewalNotices   Boolean @default(true)
   notifyBirthdays        Boolean @default(true)
 
+  // Dominio de envío verificado en Resend (para que los correos no lleguen como spam).
+  emailDomain     String?
+  resendDomainId  String?
+
   updatedAt   DateTime @updatedAt
   updatedById String?
   updatedBy   User?    @relation(fields: [updatedById], references: [id])

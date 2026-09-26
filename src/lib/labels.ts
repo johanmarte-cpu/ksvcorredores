@@ -143,3 +143,13 @@ export const DUE_DILIGENCE_TYPE_LABELS: Record<string, string> = {
   NORMAL: "Normal",
   AMPLIADA: "Ampliada",
 };
+
+export const DOMAIN_STATUS_LABELS: Record<string, string> = {
+  verified: "Verificado",
+  pending: "Pendiente",
+  partially_verified: "Parcialmente verificado",
+  not_started: "Sin iniciar",
+  failed: "Falló",
+  partially_failed: "Parcialmente fallido",
+  temporary_failure: "Falla temporal",
+};

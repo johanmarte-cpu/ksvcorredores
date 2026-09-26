@@ -2,12 +2,14 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getSettings } from "@/lib/settings";
 import { SettingsForm } from "./settings-form";
+import { DomainSection } from "./domain-section";
+import { getDomainStatus } from "./domain-actions";
 
 export default async function SettingsPage() {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") redirect("/dashboard");
 
-  const settings = await getSettings();
+  const [settings, domain] = await Promise.all([getSettings(), getDomainStatus()]);
 
   return (
     <div className="space-y-4">
@@ -33,6 +35,8 @@ export default async function SettingsPage() {
         notifyRenewalNotices={settings.notifyRenewalNotices}
         notifyBirthdays={settings.notifyBirthdays}
       />
+
+      <DomainSection domain={domain} />
     </div>
   );
 }

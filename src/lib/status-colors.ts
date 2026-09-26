@@ -79,6 +79,16 @@ export const RISK_LEVEL_TONE: Record<string, Tone> = {
   ALTO: "rose",
 };
 
+export const DOMAIN_STATUS_TONE: Record<string, Tone> = {
+  verified: "emerald",
+  pending: "amber",
+  partially_verified: "amber",
+  not_started: "slate",
+  failed: "rose",
+  partially_failed: "rose",
+  temporary_failure: "rose",
+};
+
 export const ROLE_TONE: Record<string, Tone> = {
   ADMIN: "violet",
   BROKER: "blue",
