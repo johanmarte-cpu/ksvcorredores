@@ -124,6 +124,8 @@ export async function markPaymentPaid(policyId: string, paymentId: string) {
     data: { status: "PAID", paidDate: new Date() },
   });
   revalidatePath(`/policies/${policyId}`);
+  revalidatePath("/collections");
+  revalidatePath("/dashboard");
 }
 
 const scheduleSchema = z.object({
