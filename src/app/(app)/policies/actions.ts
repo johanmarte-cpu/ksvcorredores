@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requiredString } from "@/lib/validation";
-import { buildPaymentSchedule } from "@/lib/payment-schedule";
+import { buildPaymentSchedule, buildCustomInstallments } from "@/lib/payment-schedule";
 import { calculateItbis } from "@/lib/tax";
 
 const policySchema = z.object({
@@ -114,4 +114,57 @@ export async function markPaymentPaid(policyId: string, paymentId: string) {
     data: { status: "PAID", paidDate: new Date() },
   });
   revalidatePath(`/policies/${policyId}`);
+}
+
+const scheduleSchema = z.object({
+  policyId: requiredString("Póliza inválida"),
+  installments: z.coerce.number().int().min(1, "Debe ser al menos 1 cuota").max(36, "Máximo 36 cuotas"),
+  startDate: z.string().min(1, "La fecha de la primera cuota es requerida"),
+});
+
+/**
+ * Rebuilds a policy's pending "acuerdo de pago" into a custom number of installments,
+ * independent of its contractual paymentFrequency (e.g. an annual policy billed in quotas).
+ * Already-paid installments are left untouched; only the remaining balance is rescheduled.
+ */
+export async function updatePaymentSchedule(_prevState: { error?: string } | undefined, formData: FormData) {
+  const parsed = scheduleSchema.safeParse({
+    policyId: formData.get("policyId"),
+    installments: formData.get("installments"),
+    startDate: formData.get("startDate"),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
+
+  const policy = await prisma.policy.findUnique({
+    where: { id: parsed.data.policyId },
+    include: { payments: true },
+  });
+  if (!policy) return { error: "Póliza no encontrada" };
+
+  const paidAmount = policy.payments
+    .filter((p) => p.status === "PAID")
+    .reduce((sum, p) => sum + Number(p.amount), 0);
+  const remaining = Math.round((Number(policy.totalAmount) - paidAmount) * 100) / 100;
+
+  if (remaining <= 0) {
+    return { error: "Esta póliza ya está completamente pagada, no hay saldo para reprogramar" };
+  }
+
+  const pendingIds = policy.payments.filter((p) => p.status !== "PAID").map((p) => p.id);
+  const schedule = buildCustomInstallments(remaining, parsed.data.installments, new Date(parsed.data.startDate));
+
+  await prisma.$transaction([
+    prisma.policyPayment.deleteMany({ where: { id: { in: pendingIds } } }),
+    prisma.policyPayment.createMany({
+      data: schedule.map((installment) => ({
+        policyId: policy.id,
+        amount: installment.amount,
+        dueDate: installment.dueDate,
+        status: "PENDING",
+      })),
+    }),
+  ]);
+
+  revalidatePath(`/policies/${policy.id}`);
+  return { success: true };
 }

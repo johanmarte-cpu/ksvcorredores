@@ -16,22 +16,30 @@ const MONTHS_BETWEEN: Record<PaymentFrequency, number> = {
   MONTHLY: 1,
 };
 
-/** Splits a policy's premium into an installment schedule (the "acuerdo de pago") starting at startDate. */
-export function buildPaymentSchedule(premium: number, frequency: PaymentFrequency, startDate: Date) {
-  const count = INSTALLMENTS[frequency];
-  const step = MONTHS_BETWEEN[frequency];
-  const base = Math.floor((premium / count) * 100) / 100;
+/** Splits `amount` into `count` installments, `monthsStep` months apart, starting at startDate. */
+export function buildInstallments(amount: number, count: number, startDate: Date, monthsStep: number) {
+  const base = Math.floor((amount / count) * 100) / 100;
 
   const installments: { amount: number; dueDate: Date }[] = [];
-  let remaining = premium;
+  let remaining = amount;
   for (let i = 0; i < count; i++) {
     const isLast = i === count - 1;
-    const amount = isLast ? Math.round(remaining * 100) / 100 : base;
-    remaining = Math.round((remaining - amount) * 100) / 100;
+    const installmentAmount = isLast ? Math.round(remaining * 100) / 100 : base;
+    remaining = Math.round((remaining - installmentAmount) * 100) / 100;
 
     const dueDate = new Date(startDate);
-    dueDate.setMonth(dueDate.getMonth() + step * i);
-    installments.push({ amount, dueDate });
+    dueDate.setMonth(dueDate.getMonth() + monthsStep * i);
+    installments.push({ amount: installmentAmount, dueDate });
   }
   return installments;
+}
+
+/** Splits a policy's total into an installment schedule (the "acuerdo de pago") starting at startDate. */
+export function buildPaymentSchedule(total: number, frequency: PaymentFrequency, startDate: Date) {
+  return buildInstallments(total, INSTALLMENTS[frequency], startDate, MONTHS_BETWEEN[frequency]);
+}
+
+/** Splits a remaining balance into an arbitrary number of monthly installments — used to customize an existing acuerdo de pago. */
+export function buildCustomInstallments(amount: number, count: number, startDate: Date) {
+  return buildInstallments(amount, count, startDate, count > 1 ? 1 : 0);
 }

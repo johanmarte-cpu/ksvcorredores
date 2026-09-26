@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatCurrency, formatDate } from "@/lib/format";
 import { POLICY_STATUS_LABELS, PAYMENT_FREQUENCY_LABELS, CLAIM_STATUS_LABELS } from "@/lib/labels";
-import { NewPaymentDialog, MarkPaidButton } from "./payment-forms";
+import { NewPaymentDialog, MarkPaidButton, EditScheduleDialog } from "./payment-forms";
 import { NewCommissionDialog, ReceiveCommissionDialog } from "../../commissions/commission-forms";
 
 const PAYMENT_STATUS_LABELS: Record<string, string> = {
@@ -65,10 +65,20 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
           <div>
             <CardTitle className="text-base">Acuerdo de pago</CardTitle>
             <p className="text-xs text-muted-foreground">
-              Generado automáticamente según la forma de pago ({PAYMENT_FREQUENCY_LABELS[policy.paymentFrequency]})
+              Generado según la forma de pago ({PAYMENT_FREQUENCY_LABELS[policy.paymentFrequency]}) — puedes reprogramarlo en cuotas
+              distintas con &quot;Editar acuerdo de pago&quot;
             </p>
           </div>
-          <NewPaymentDialog policyId={policy.id} />
+          <div className="flex gap-2">
+            <EditScheduleDialog
+              policyId={policy.id}
+              remainingAmount={
+                Number(policy.totalAmount) -
+                policy.payments.filter((p) => p.status === "PAID").reduce((sum, p) => sum + Number(p.amount), 0)
+              }
+            />
+            <NewPaymentDialog policyId={policy.id} />
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
