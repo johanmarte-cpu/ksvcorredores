@@ -4,6 +4,7 @@ import { getSettings } from "@/lib/settings";
 import { SettingsForm } from "./settings-form";
 import { DomainSection } from "./domain-section";
 import { getDomainStatus } from "./domain-actions";
+import { ClientImportSection } from "./client-import-section";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -37,6 +38,8 @@ export default async function SettingsPage() {
       />
 
       <DomainSection domain={domain} />
+
+      <ClientImportSection />
     </div>
   );
 }
