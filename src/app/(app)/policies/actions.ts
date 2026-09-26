@@ -16,6 +16,7 @@ const policySchema = z.object({
   premium: z.coerce.number().positive("La prima debe ser mayor a 0"),
   commissionPercentage: z.coerce.number().min(0).max(100),
   paymentFrequency: z.enum(["SINGLE", "MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL"]),
+  installments: z.coerce.number().int().min(1, "Debe ser al menos 1 cuota").max(36, "Máximo 36 cuotas"),
   startDate: z.string().min(1),
   endDate: z.string().min(1),
 });
@@ -29,6 +30,7 @@ export async function createPolicy(_prevState: { error?: string } | undefined, f
     premium: formData.get("premium"),
     commissionPercentage: formData.get("commissionPercentage"),
     paymentFrequency: formData.get("paymentFrequency"),
+    installments: formData.get("installments"),
     startDate: formData.get("startDate"),
     endDate: formData.get("endDate"),
   });
@@ -37,7 +39,7 @@ export async function createPolicy(_prevState: { error?: string } | undefined, f
   const commissionAmount = (parsed.data.premium * parsed.data.commissionPercentage) / 100;
   const { itbisAmount, totalAmount } = calculateItbis(parsed.data.premium);
   const startDate = new Date(parsed.data.startDate);
-  const schedule = buildPaymentSchedule(parsed.data.premium, totalAmount, parsed.data.paymentFrequency, startDate);
+  const schedule = buildPaymentSchedule(parsed.data.premium, totalAmount, parsed.data.installments, startDate);
 
   let policyId: string;
   try {

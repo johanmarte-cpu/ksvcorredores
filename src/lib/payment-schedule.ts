@@ -1,22 +1,4 @@
-import type { PaymentFrequency } from "@/generated/prisma/client";
-
 export const DOWN_PAYMENT_RATE = 0.25;
-
-const INSTALLMENTS: Record<PaymentFrequency, number> = {
-  SINGLE: 1,
-  ANNUAL: 1,
-  SEMIANNUAL: 2,
-  QUARTERLY: 4,
-  MONTHLY: 12,
-};
-
-const MONTHS_BETWEEN: Record<PaymentFrequency, number> = {
-  SINGLE: 1,
-  ANNUAL: 1,
-  SEMIANNUAL: 6,
-  QUARTERLY: 3,
-  MONTHLY: 1,
-};
 
 /** Splits `amount` into `count` installments, `monthsStep` months apart, starting at startDate. */
 export function buildInstallments(amount: number, count: number, startDate: Date, monthsStep: number) {
@@ -43,20 +25,18 @@ export function calculateDownPayment(premium: number) {
 
 /**
  * Builds a policy's "acuerdo de pago": an upfront Inicial (25% of the premium),
- * followed by the remaining balance split across the installments implied by
- * the payment frequency.
+ * followed by the remaining balance split into `installments` equal monthly
+ * quotas chosen by the broker — independent of the policy's contractual
+ * payment frequency.
  */
-export function buildPaymentSchedule(premium: number, total: number, frequency: PaymentFrequency, startDate: Date) {
+export function buildPaymentSchedule(premium: number, total: number, installments: number, startDate: Date) {
   const downPayment = calculateDownPayment(premium);
   const balance = Math.round((total - downPayment) * 100) / 100;
 
-  const remainingCount = Math.max(INSTALLMENTS[frequency] - 1, 1);
-  const step = MONTHS_BETWEEN[frequency];
-
   const balanceStart = new Date(startDate);
-  balanceStart.setMonth(balanceStart.getMonth() + step);
+  balanceStart.setMonth(balanceStart.getMonth() + 1);
 
-  return [{ amount: downPayment, dueDate: new Date(startDate) }, ...buildInstallments(balance, remainingCount, balanceStart, step)];
+  return [{ amount: downPayment, dueDate: new Date(startDate) }, ...buildInstallments(balance, installments, balanceStart, 1)];
 }
 
 /** Splits a remaining balance into an arbitrary number of monthly installments — used to customize an existing acuerdo de pago. */

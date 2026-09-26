@@ -142,6 +142,7 @@ const convertSchema = z.object({
   startDate: z.string().min(1),
   endDate: z.string().min(1),
   paymentFrequency: z.enum(["SINGLE", "MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL"]),
+  installments: z.coerce.number().int().min(1, "Debe ser al menos 1 cuota").max(36, "Máximo 36 cuotas"),
   commissionPercentage: z.coerce.number().min(0).max(100),
 });
 
@@ -153,6 +154,7 @@ export async function convertQuoteToPolicy(_prevState: { error?: string } | unde
     startDate: formData.get("startDate"),
     endDate: formData.get("endDate"),
     paymentFrequency: formData.get("paymentFrequency"),
+    installments: formData.get("installments"),
     commissionPercentage: formData.get("commissionPercentage"),
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
@@ -169,7 +171,7 @@ export async function convertQuoteToPolicy(_prevState: { error?: string } | unde
   const commissionAmount = (premium * parsed.data.commissionPercentage) / 100;
   const { itbisAmount, totalAmount } = calculateItbis(premium);
   const startDate = new Date(parsed.data.startDate);
-  const schedule = buildPaymentSchedule(premium, totalAmount, parsed.data.paymentFrequency, startDate);
+  const schedule = buildPaymentSchedule(premium, totalAmount, parsed.data.installments, startDate);
 
   let policyId: string;
   try {
