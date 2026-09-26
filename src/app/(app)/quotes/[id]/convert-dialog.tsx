@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { convertQuoteToPolicy } from "../actions";
 import { PAYMENT_FREQUENCY_LABELS } from "@/lib/labels";
 import { calculateItbis } from "@/lib/tax";
+import { calculateDownPayment } from "@/lib/payment-schedule";
 import { formatCurrency } from "@/lib/format";
 
 export function ConvertDialog({
@@ -32,6 +33,7 @@ export function ConvertDialog({
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(convertQuoteToPolicy, undefined);
   const { itbisAmount, totalAmount } = calculateItbis(premium);
+  const downPayment = calculateDownPayment(premium);
 
   const [today] = useState(() => new Date().toISOString().slice(0, 10));
   const [nextYear] = useState(() => new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
@@ -66,6 +68,10 @@ export function ConvertDialog({
               <p className="font-semibold">{formatCurrency(totalAmount)}</p>
             </div>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Inicial (25% de la prima): <span className="font-medium text-foreground">{formatCurrency(downPayment)}</span> — el resto se
+            reparte según la forma de pago elegida abajo.
+          </p>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="startDate">Inicio de vigencia</Label>

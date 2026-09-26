@@ -100,7 +100,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
               )}
               {policy.payments.map((payment, index) => (
                 <TableRow key={payment.id}>
-                  <TableCell className="text-muted-foreground">{index + 1}</TableCell>
+                  <TableCell className="text-muted-foreground">{index === 0 ? "Inicial" : index}</TableCell>
                   <TableCell>{formatDate(payment.dueDate)}</TableCell>
                   <TableCell>{formatCurrency(payment.amount.toString())}</TableCell>
                   <TableCell>

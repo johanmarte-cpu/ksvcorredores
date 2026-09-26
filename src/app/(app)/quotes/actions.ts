@@ -169,7 +169,7 @@ export async function convertQuoteToPolicy(_prevState: { error?: string } | unde
   const commissionAmount = (premium * parsed.data.commissionPercentage) / 100;
   const { itbisAmount, totalAmount } = calculateItbis(premium);
   const startDate = new Date(parsed.data.startDate);
-  const schedule = buildPaymentSchedule(totalAmount, parsed.data.paymentFrequency, startDate);
+  const schedule = buildPaymentSchedule(premium, totalAmount, parsed.data.paymentFrequency, startDate);
 
   let policyId: string;
   try {

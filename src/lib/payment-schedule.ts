@@ -1,5 +1,7 @@
 import type { PaymentFrequency } from "@/generated/prisma/client";
 
+export const DOWN_PAYMENT_RATE = 0.25;
+
 const INSTALLMENTS: Record<PaymentFrequency, number> = {
   SINGLE: 1,
   ANNUAL: 1,
@@ -9,8 +11,8 @@ const INSTALLMENTS: Record<PaymentFrequency, number> = {
 };
 
 const MONTHS_BETWEEN: Record<PaymentFrequency, number> = {
-  SINGLE: 0,
-  ANNUAL: 0,
+  SINGLE: 1,
+  ANNUAL: 1,
   SEMIANNUAL: 6,
   QUARTERLY: 3,
   MONTHLY: 1,
@@ -34,9 +36,27 @@ export function buildInstallments(amount: number, count: number, startDate: Date
   return installments;
 }
 
-/** Splits a policy's total into an installment schedule (the "acuerdo de pago") starting at startDate. */
-export function buildPaymentSchedule(total: number, frequency: PaymentFrequency, startDate: Date) {
-  return buildInstallments(total, INSTALLMENTS[frequency], startDate, MONTHS_BETWEEN[frequency]);
+/** The upfront down payment ("Inicial"): always 25% of the premium (before ITBIS). */
+export function calculateDownPayment(premium: number) {
+  return Math.round(premium * DOWN_PAYMENT_RATE * 100) / 100;
+}
+
+/**
+ * Builds a policy's "acuerdo de pago": an upfront Inicial (25% of the premium),
+ * followed by the remaining balance split across the installments implied by
+ * the payment frequency.
+ */
+export function buildPaymentSchedule(premium: number, total: number, frequency: PaymentFrequency, startDate: Date) {
+  const downPayment = calculateDownPayment(premium);
+  const balance = Math.round((total - downPayment) * 100) / 100;
+
+  const remainingCount = Math.max(INSTALLMENTS[frequency] - 1, 1);
+  const step = MONTHS_BETWEEN[frequency];
+
+  const balanceStart = new Date(startDate);
+  balanceStart.setMonth(balanceStart.getMonth() + step);
+
+  return [{ amount: downPayment, dueDate: new Date(startDate) }, ...buildInstallments(balance, remainingCount, balanceStart, step)];
 }
 
 /** Splits a remaining balance into an arbitrary number of monthly installments — used to customize an existing acuerdo de pago. */

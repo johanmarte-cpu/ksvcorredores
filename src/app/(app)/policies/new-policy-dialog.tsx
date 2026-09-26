@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { createPolicy } from "./actions";
 import { PAYMENT_FREQUENCY_LABELS } from "@/lib/labels";
 import { calculateItbis } from "@/lib/tax";
+import { calculateDownPayment } from "@/lib/payment-schedule";
 import { formatCurrency } from "@/lib/format";
 
 type Insurer = { id: string; name: string; products: { id: string; name: string }[] };
@@ -35,6 +36,7 @@ export function NewPolicyDialog({
   const products = insurers.find((i) => i.id === insurerId)?.products ?? [];
   const insurerHasNoProducts = insurerId !== "" && products.length === 0;
   const { itbisAmount, totalAmount } = calculateItbis(Number(premium) || 0);
+  const downPayment = calculateDownPayment(Number(premium) || 0);
 
   const [today] = useState(() => new Date().toISOString().slice(0, 10));
   const [nextYear] = useState(() => new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
@@ -140,6 +142,10 @@ export function NewPolicyDialog({
               <p className="font-semibold">{formatCurrency(totalAmount)}</p>
             </div>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Inicial (25% de la prima): <span className="font-medium text-foreground">{formatCurrency(downPayment)}</span> — el resto se
+            reparte según la forma de pago elegida abajo.
+          </p>
           <div className="space-y-2">
             <Label>Forma de pago</Label>
             <Select name="paymentFrequency" defaultValue="ANNUAL">

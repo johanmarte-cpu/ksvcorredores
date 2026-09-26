@@ -97,7 +97,7 @@ export default async function PrintPaymentAgreementPage({ params }: { params: Pr
           <tbody>
             {policy.payments.map((payment, index) => (
               <tr key={payment.id} className="border-b border-gray-200">
-                <td className="py-2 pr-2">{index + 1}</td>
+                <td className="py-2 pr-2">{index === 0 ? "Inicial" : index}</td>
                 <td className="py-2 pr-2">{formatDate(payment.dueDate)}</td>
                 <td className="py-2 pr-2">{formatCurrency(payment.amount.toString())}</td>
                 <td className="py-2 pr-2">{PAYMENT_STATUS_LABELS[payment.status]}</td>

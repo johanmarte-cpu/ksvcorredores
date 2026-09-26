@@ -37,7 +37,7 @@ export async function createPolicy(_prevState: { error?: string } | undefined, f
   const commissionAmount = (parsed.data.premium * parsed.data.commissionPercentage) / 100;
   const { itbisAmount, totalAmount } = calculateItbis(parsed.data.premium);
   const startDate = new Date(parsed.data.startDate);
-  const schedule = buildPaymentSchedule(totalAmount, parsed.data.paymentFrequency, startDate);
+  const schedule = buildPaymentSchedule(parsed.data.premium, totalAmount, parsed.data.paymentFrequency, startDate);
 
   let policyId: string;
   try {
