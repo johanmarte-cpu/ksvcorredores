@@ -64,6 +64,13 @@ export const CLAIM_EVENT_TYPE_LABELS: Record<string, string> = {
   DOCUMENT_ADDED: "Documento agregado",
 };
 
+export const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  PENDING: "Pendiente",
+  PAID: "Pagado",
+  OVERDUE: "Vencido",
+  CANCELLED: "Cancelado",
+};
+
 export const RENEWAL_STATUS_LABELS: Record<string, string> = {
   PENDING: "Pendiente",
   IN_PROGRESS: "En proceso",

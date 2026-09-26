@@ -1,21 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Printer } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatCurrency, formatDate } from "@/lib/format";
-import { POLICY_STATUS_LABELS, PAYMENT_FREQUENCY_LABELS, CLAIM_STATUS_LABELS } from "@/lib/labels";
+import { POLICY_STATUS_LABELS, PAYMENT_FREQUENCY_LABELS, CLAIM_STATUS_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/labels";
 import { NewPaymentDialog, MarkPaidButton, EditScheduleDialog } from "./payment-forms";
 import { NewCommissionDialog, ReceiveCommissionDialog } from "../../commissions/commission-forms";
-
-const PAYMENT_STATUS_LABELS: Record<string, string> = {
-  PENDING: "Pendiente",
-  PAID: "Pagado",
-  OVERDUE: "Vencido",
-  CANCELLED: "Cancelado",
-};
 
 export default async function PolicyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -70,6 +64,11 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
             </p>
           </div>
           <div className="flex gap-2">
+            <Button asChild size="sm" variant="outline">
+              <Link href={`/print/policies/${policy.id}`} target="_blank">
+                <Printer className="mr-1 h-4 w-4" /> Imprimir
+              </Link>
+            </Button>
             <EditScheduleDialog
               policyId={policy.id}
               remainingAmount={
