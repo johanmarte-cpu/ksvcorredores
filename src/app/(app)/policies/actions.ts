@@ -4,13 +4,15 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { requiredString } from "@/lib/validation";
+import { buildPaymentSchedule } from "@/lib/payment-schedule";
 
 const policySchema = z.object({
-  clientId: z.string().min(1),
-  insurerId: z.string().min(1),
-  productId: z.string().min(1),
-  policyNumber: z.string().min(1),
-  premium: z.coerce.number().positive(),
+  clientId: requiredString("Selecciona un cliente"),
+  insurerId: requiredString("Selecciona una aseguradora"),
+  productId: requiredString("Selecciona un producto"),
+  policyNumber: z.string().min(1, "El número de póliza es requerido"),
+  premium: z.coerce.number().positive("La prima debe ser mayor a 0"),
   commissionPercentage: z.coerce.number().min(0).max(100),
   paymentFrequency: z.enum(["SINGLE", "MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL"]),
   startDate: z.string().min(1),
@@ -32,23 +34,36 @@ export async function createPolicy(_prevState: { error?: string } | undefined, f
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
 
   const commissionAmount = (parsed.data.premium * parsed.data.commissionPercentage) / 100;
+  const startDate = new Date(parsed.data.startDate);
+  const schedule = buildPaymentSchedule(parsed.data.premium, parsed.data.paymentFrequency, startDate);
 
   let policyId: string;
   try {
-    const policy = await prisma.policy.create({
-      data: {
-        clientId: parsed.data.clientId,
-        insurerId: parsed.data.insurerId,
-        productId: parsed.data.productId,
-        policyNumber: parsed.data.policyNumber,
-        premium: parsed.data.premium,
-        commissionPercentage: parsed.data.commissionPercentage,
-        commissionAmount,
-        paymentFrequency: parsed.data.paymentFrequency,
-        startDate: new Date(parsed.data.startDate),
-        endDate: new Date(parsed.data.endDate),
-        status: "ACTIVE",
-      },
+    const policy = await prisma.$transaction(async (tx) => {
+      const created = await tx.policy.create({
+        data: {
+          clientId: parsed.data.clientId,
+          insurerId: parsed.data.insurerId,
+          productId: parsed.data.productId,
+          policyNumber: parsed.data.policyNumber,
+          premium: parsed.data.premium,
+          commissionPercentage: parsed.data.commissionPercentage,
+          commissionAmount,
+          paymentFrequency: parsed.data.paymentFrequency,
+          startDate,
+          endDate: new Date(parsed.data.endDate),
+          status: "ACTIVE",
+        },
+      });
+      await tx.policyPayment.createMany({
+        data: schedule.map((installment) => ({
+          policyId: created.id,
+          amount: installment.amount,
+          dueDate: installment.dueDate,
+          status: "PENDING",
+        })),
+      });
+      return created;
     });
     policyId = policy.id;
   } catch (e: unknown) {

@@ -57,13 +57,19 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="text-base">Cobros</CardTitle>
+          <div>
+            <CardTitle className="text-base">Acuerdo de pago</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Generado automáticamente según la forma de pago ({PAYMENT_FREQUENCY_LABELS[policy.paymentFrequency]})
+            </p>
+          </div>
           <NewPaymentDialog policyId={policy.id} />
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Cuota</TableHead>
                 <TableHead>Vence</TableHead>
                 <TableHead>Monto</TableHead>
                 <TableHead>Estado</TableHead>
@@ -73,13 +79,14 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
             <TableBody>
               {policy.payments.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
                     Sin cobros registrados
                   </TableCell>
                 </TableRow>
               )}
-              {policy.payments.map((payment) => (
+              {policy.payments.map((payment, index) => (
                 <TableRow key={payment.id}>
+                  <TableCell className="text-muted-foreground">{index + 1}</TableCell>
                   <TableCell>{formatDate(payment.dueDate)}</TableCell>
                   <TableCell>{formatCurrency(payment.amount.toString())}</TableCell>
                   <TableCell>

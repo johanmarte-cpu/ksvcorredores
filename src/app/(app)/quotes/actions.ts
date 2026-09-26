@@ -5,9 +5,11 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { requiredString } from "@/lib/validation";
+import { buildPaymentSchedule } from "@/lib/payment-schedule";
 
 const quoteSchema = z.object({
-  clientId: z.string().min(1),
+  clientId: requiredString("Selecciona un cliente"),
   lineOfBusiness: z.enum(["AUTO", "LIFE", "HEALTH", "PROPERTY", "LIABILITY", "OTHER"]),
   notes: z.string().optional(),
 });
@@ -30,8 +32,8 @@ export async function createQuote(_prevState: { error?: string } | undefined, fo
 }
 
 const requestSchema = z.object({
-  quoteId: z.string().min(1),
-  insurerId: z.string().min(1),
+  quoteId: requiredString("Cotización inválida"),
+  insurerId: requiredString("Selecciona una aseguradora"),
   productId: z.string().optional(),
 });
 
@@ -64,8 +66,8 @@ export async function sendQuoteRequest(_prevState: { error?: string } | undefine
 }
 
 const optionSchema = z.object({
-  quoteId: z.string().min(1),
-  quoteRequestId: z.string().min(1),
+  quoteId: requiredString("Cotización inválida"),
+  quoteRequestId: requiredString("Solicitud inválida"),
   premium: z.coerce.number().positive(),
   coverageSummary: z.string().optional(),
   deductible: z.coerce.number().optional(),
@@ -133,9 +135,9 @@ export async function selectQuoteOption(quoteId: string, quoteOptionId: string) 
 }
 
 const convertSchema = z.object({
-  quoteId: z.string().min(1),
-  quoteRequestId: z.string().min(1),
-  policyNumber: z.string().min(1),
+  quoteId: requiredString("Cotización inválida"),
+  quoteRequestId: requiredString("Solicitud inválida"),
+  policyNumber: z.string().min(1, "El número de póliza es requerido"),
   startDate: z.string().min(1),
   endDate: z.string().min(1),
   paymentFrequency: z.enum(["SINGLE", "MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL"]),
@@ -164,6 +166,8 @@ export async function convertQuoteToPolicy(_prevState: { error?: string } | unde
 
   const premium = Number(request.option.premium);
   const commissionAmount = (premium * parsed.data.commissionPercentage) / 100;
+  const startDate = new Date(parsed.data.startDate);
+  const schedule = buildPaymentSchedule(premium, parsed.data.paymentFrequency, startDate);
 
   let policyId: string;
   try {
@@ -179,10 +183,18 @@ export async function convertQuoteToPolicy(_prevState: { error?: string } | unde
           commissionPercentage: parsed.data.commissionPercentage,
           commissionAmount,
           paymentFrequency: parsed.data.paymentFrequency,
-          startDate: new Date(parsed.data.startDate),
+          startDate,
           endDate: new Date(parsed.data.endDate),
           status: "ACTIVE",
         },
+      });
+      await tx.policyPayment.createMany({
+        data: schedule.map((installment) => ({
+          policyId: created.id,
+          amount: installment.amount,
+          dueDate: installment.dueDate,
+          status: "PENDING",
+        })),
       });
       await tx.quote.update({ where: { id: request.quoteId }, data: { status: "CONVERTED" } });
       return created;

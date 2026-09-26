@@ -30,6 +30,7 @@ export function NewPolicyDialog({
   const [insurerId, setInsurerId] = useState("");
   const [state, formAction, pending] = useActionState(createPolicy, undefined);
   const products = insurers.find((i) => i.id === insurerId)?.products ?? [];
+  const insurerHasNoProducts = insurerId !== "" && products.length === 0;
 
   const [today] = useState(() => new Date().toISOString().slice(0, 10));
   const [nextYear] = useState(() => new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
@@ -93,6 +94,11 @@ export function NewPolicyDialog({
               </Select>
             </div>
           </div>
+          {insurerHasNoProducts && (
+            <p className="text-sm text-destructive">
+              Esta aseguradora no tiene productos registrados. Agrega uno en su ficha antes de crear la póliza.
+            </p>
+          )}
           <div className="space-y-2">
             <Label htmlFor="policyNumber">Número de póliza</Label>
             <Input id="policyNumber" name="policyNumber" required />
@@ -134,7 +140,7 @@ export function NewPolicyDialog({
           </div>
           {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
           <DialogFooter>
-            <Button type="submit" disabled={pending}>
+            <Button type="submit" disabled={pending || insurerHasNoProducts}>
               {pending ? "Creando..." : "Crear póliza"}
             </Button>
           </DialogFooter>

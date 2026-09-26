@@ -50,13 +50,14 @@ export function NewProductForm({ insurerId }: { insurerId: string }) {
 
 export function NewCommissionForm({ insurerId, products }: { insurerId: string; products: { id: string; name: string }[] }) {
   const [state, formAction, pending] = useActionState(createCommissionRate, undefined);
+  const hasProducts = products.length > 0;
 
   return (
     <form action={formAction} className="flex flex-wrap items-end gap-2">
       <input type="hidden" name="insurerId" value={insurerId} />
       <div className="space-y-1">
         <label className="text-xs text-muted-foreground">Producto</label>
-        <Select name="productId" required>
+        <Select name="productId" required disabled={!hasProducts}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Selecciona" />
           </SelectTrigger>
@@ -77,9 +78,10 @@ export function NewCommissionForm({ insurerId, products }: { insurerId: string; 
         <label className="text-xs text-muted-foreground">Vigente desde</label>
         <Input name="effectiveFrom" type="date" required />
       </div>
-      <Button type="submit" size="sm" disabled={pending}>
+      <Button type="submit" size="sm" disabled={pending || !hasProducts}>
         Agregar tasa
       </Button>
+      {!hasProducts && <p className="w-full text-sm text-muted-foreground">Agrega un producto primero.</p>}
       {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
     </form>
   );

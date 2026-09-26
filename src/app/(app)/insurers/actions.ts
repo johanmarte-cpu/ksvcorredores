@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { requiredString } from "@/lib/validation";
 
 const insurerSchema = z.object({
   name: z.string().min(1),
@@ -66,8 +67,8 @@ export async function createProduct(_prevState: { error?: string } | undefined, 
 }
 
 const commissionSchema = z.object({
-  insurerId: z.string().min(1),
-  productId: z.string().min(1),
+  insurerId: requiredString("Aseguradora inválida"),
+  productId: requiredString("Selecciona un producto"),
   percentage: z.coerce.number().min(0).max(100),
   effectiveFrom: z.string().min(1),
 });
