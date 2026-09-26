@@ -73,6 +73,12 @@ export const COMMISSION_STATUS_TONE: Record<string, Tone> = {
   DISPUTED: "rose",
 };
 
+export const RISK_LEVEL_TONE: Record<string, Tone> = {
+  BAJO: "emerald",
+  MEDIO: "amber",
+  ALTO: "rose",
+};
+
 export const ROLE_TONE: Record<string, Tone> = {
   ADMIN: "violet",
   BROKER: "blue",

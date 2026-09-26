@@ -27,6 +27,20 @@ enum ClientType {
   COMPANY
 }
 
+// Nivel de riesgo LA/FT del cliente (Guía de Debida Diligencia UAF-CONCLAFIT, Ley 155-17).
+enum RiskLevel {
+  BAJO
+  MEDIO
+  ALTO
+}
+
+// Tipo de debida diligencia aplicada según el nivel de riesgo (art. 38 Ley 155-17).
+enum DueDiligenceType {
+  SIMPLIFICADA
+  NORMAL
+  AMPLIADA
+}
+
 enum ThirdPartyType {
   TOMADOR
   ASEGURADO
@@ -203,6 +217,7 @@ model User {
   auditLogs         AuditLog[]
   uploadedDocuments ClientDocument[]
   knowledgeForms    ClientKnowledgeForm[]
+  ddApprovals       ClientKnowledgeForm[] @relation("KnowledgeFormApprover")
   settingsUpdated   SystemSettings[]
 
   @@map("users")
@@ -230,12 +245,13 @@ model Client {
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 
-  contacts      ClientContact[]
-  documents     ClientDocument[]
-  notes         ClientNote[]
-  quotes        Quote[]
-  policies      Policy[]
-  knowledgeForm ClientKnowledgeForm?
+  contacts         ClientContact[]
+  documents        ClientDocument[]
+  notes            ClientNote[]
+  quotes           Quote[]
+  policies         Policy[]
+  knowledgeForm    ClientKnowledgeForm?
+  beneficialOwners BeneficialOwner[]
 
   @@map("clients")
 }
@@ -333,6 +349,30 @@ model ClientKnowledgeForm {
   insuranceBranch      InsuranceBranch?
   insuranceBranchOther String?
 
+  // ── Debida diligencia (Ley 155-17 / Guía UAF-CONCLAFIT) ──
+  // La debida diligencia aplica principalmente a seguros de vida y seguros con
+  // componente de inversión. Aplica a personas físicas y jurídicas.
+  riskLevel         RiskLevel?
+  diligenceType     DueDiligenceType?
+  riskFactorsDetail String? // factores considerados: cliente, producto/servicio, zona geográfica, canal
+
+  businessRelationshipPurpose String? // propósito y naturaleza de la relación comercial
+
+  sourceOfFunds           String? // actividad que genera los fondos y cómo se acumularon
+  sourceOfFundsDocumented Boolean? // ¿el origen de fondos está sustentado con documentos?
+
+  sanctionsListChecked     Boolean? // verificado en listas del Consejo de Seguridad de la ONU
+  sanctionsListCheckedDate DateTime?
+  adverseMediaChecked      Boolean? // revisión en prensa/internet
+
+  // Requerido cuando riskLevel = ALTO o el cliente/relacionado es PEP.
+  seniorManagementApproved     Boolean?
+  seniorManagementApprovedById String?
+  seniorManagementApprovedBy   User?     @relation("KnowledgeFormApprover", fields: [seniorManagementApprovedById], references: [id])
+  ongoingMonitoringNotes       String?
+
+  nextReviewDate DateTime? // próxima actualización periódica, según nivel de riesgo
+
   verificationDate DateTime?
   verifierCode     String?
   completedById    String?
@@ -342,6 +382,26 @@ model ClientKnowledgeForm {
   updatedAt DateTime @updatedAt
 
   @@map("client_knowledge_forms")
+}
+
+// Beneficiario final (persona física que ejerce control efectivo o posee al menos
+// el 20% del capital) — requerido para clientes tipo empresa, Guía UAF-CONCLAFIT.
+model BeneficialOwner {
+  id       String @id @default(cuid())
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  fullName         String
+  idType           IdentificationType?
+  idNumber         String?
+  ownershipPercent Decimal?            @db.Decimal(5, 2)
+  isPep            Boolean?
+  isPepDetail      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("beneficial_owners")
 }
 
 // ─────────────────────────────────────────────────────────────

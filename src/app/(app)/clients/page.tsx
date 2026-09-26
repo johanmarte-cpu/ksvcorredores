@@ -4,13 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName } from "@/lib/format";
-import { toneClass } from "@/lib/status-colors";
+import { toneClass, statusClass, RISK_LEVEL_TONE } from "@/lib/status-colors";
+import { RISK_LEVEL_LABELS } from "@/lib/labels";
 import { NewClientDialog } from "./new-client-dialog";
 
 export default async function ClientsPage() {
   const clients = await prisma.client.findMany({
     orderBy: { createdAt: "desc" },
-    include: { _count: { select: { policies: true, quotes: true } } },
+    include: { _count: { select: { policies: true, quotes: true } }, knowledgeForm: { select: { riskLevel: true } } },
   });
 
   return (
@@ -31,12 +32,13 @@ export default async function ClientsPage() {
                 <TableHead>Contacto</TableHead>
                 <TableHead>Pólizas</TableHead>
                 <TableHead>Cotizaciones</TableHead>
+                <TableHead>Riesgo LA/FT</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {clients.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                     Aún no hay clientes registrados.
                   </TableCell>
                 </TableRow>
@@ -59,6 +61,15 @@ export default async function ClientsPage() {
                   </TableCell>
                   <TableCell>{client._count.policies}</TableCell>
                   <TableCell>{client._count.quotes}</TableCell>
+                  <TableCell>
+                    {client.knowledgeForm?.riskLevel ? (
+                      <Badge className={statusClass(RISK_LEVEL_TONE, client.knowledgeForm.riskLevel)}>
+                        {RISK_LEVEL_LABELS[client.knowledgeForm.riskLevel]}
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Sin evaluar</span>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

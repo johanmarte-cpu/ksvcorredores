@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { upsertKnowledgeForm } from "../knowledge-form-actions";
 import {
@@ -17,9 +18,21 @@ import {
   ECONOMIC_ACTIVITY_LABELS,
   MONTHLY_INCOME_RANGE_LABELS,
   INSURANCE_BRANCH_LABELS,
+  RISK_LEVEL_LABELS,
+  DUE_DILIGENCE_TYPE_LABELS,
 } from "@/lib/labels";
 
 type KnowledgeFormData = Record<string, unknown> & { thirdPartyTypes?: string[] };
+
+type BeneficialOwnerData = {
+  id?: string;
+  fullName: string;
+  idType: string | null;
+  idNumber: string | null;
+  ownershipPercent: string | null;
+  isPep: boolean | null;
+  isPepDetail: string | null;
+};
 
 function toDateInput(value: unknown) {
   if (!value) return "";
@@ -33,10 +46,25 @@ function toBoolString(value: unknown) {
   return "";
 }
 
-export function KnowledgeForm({ clientId, data }: { clientId: string; data: KnowledgeFormData | null }) {
+export function KnowledgeForm({
+  clientId,
+  clientType,
+  data,
+  beneficialOwners,
+}: {
+  clientId: string;
+  clientType: string;
+  data: KnowledgeFormData | null;
+  beneficialOwners: BeneficialOwnerData[];
+}) {
   const [state, formAction, pending] = useActionState(upsertKnowledgeForm, undefined);
   const d = data ?? {};
   const checkedTypes = new Set(d.thirdPartyTypes ?? []);
+
+  const [riskLevel, setRiskLevel] = useState((d.riskLevel as string) || "");
+  const [isPep, setIsPep] = useState(toBoolString(d.isPep));
+  const [relativeIsPep, setRelativeIsPep] = useState(toBoolString(d.relativeIsPep));
+  const requiresEnhancedDiligence = riskLevel === "ALTO" || isPep === "true" || relativeIsPep === "true";
 
   return (
     <form action={formAction} className="space-y-6">
@@ -291,18 +319,163 @@ export function KnowledgeForm({ clientId, data }: { clientId: string; data: Know
             question="¿Es persona reconocida o de influencia pública?"
             name="isPep"
             detailName="isPepDetail"
-            value={toBoolString(d.isPep)}
+            value={isPep}
+            onValueChange={setIsPep}
             detailValue={String(d.isPepDetail ?? "")}
           />
           <YesNoField
             question="¿Es afirmativa alguna de las preguntas anteriores para su cónyuge, padres, abuelos, hijos, nietos, suegros, nueras o yernos?"
             name="relativeIsPep"
             detailName="relativeIsPepDetail"
-            value={toBoolString(d.relativeIsPep)}
+            value={relativeIsPep}
+            onValueChange={setRelativeIsPep}
             detailValue={String(d.relativeIsPepDetail ?? "")}
           />
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Debida diligencia</CardTitle>
+          <CardDescription>
+            Ley 155-17 y Guía de Debida Diligencia UAF-CONCLAFIT. Aplica principalmente a seguros de vida y seguros con
+            componente de inversión.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-1">
+              <Label>Nivel de riesgo</Label>
+              <Select value={riskLevel} onValueChange={setRiskLevel} name="riskLevel">
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(RISK_LEVEL_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Considera: tipo de cliente, producto/servicio, zona geográfica y canal de distribución.
+              </p>
+            </div>
+            <div className="space-y-1">
+              <Label>Tipo de debida diligencia aplicada</Label>
+              <Select name="diligenceType" defaultValue={(d.diligenceType as string) || undefined}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(DUE_DILIGENCE_TYPE_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="riskFactorsDetail">Factores de riesgo considerados</Label>
+            <Textarea id="riskFactorsDetail" name="riskFactorsDetail" defaultValue={String(d.riskFactorsDetail ?? "")} />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="businessRelationshipPurpose">Propósito y naturaleza de la relación comercial</Label>
+            <Textarea
+              id="businessRelationshipPurpose"
+              name="businessRelationshipPurpose"
+              defaultValue={String(d.businessRelationshipPurpose ?? "")}
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="space-y-1 md:col-span-2">
+              <Label htmlFor="sourceOfFunds">Origen de fondos</Label>
+              <Textarea
+                id="sourceOfFunds"
+                name="sourceOfFunds"
+                placeholder="Actividad que genera los fondos y cómo se acumularon"
+                defaultValue={String(d.sourceOfFunds ?? "")}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>¿Sustentado con documentos?</Label>
+              <Select name="sourceOfFundsDocumented" defaultValue={toBoolString(d.sourceOfFundsDocumented) || undefined}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">Sí</SelectItem>
+                  <SelectItem value="false">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="space-y-1">
+              <Label>Verificado en listas ONU (Consejo de Seguridad)</Label>
+              <Select name="sanctionsListChecked" defaultValue={toBoolString(d.sanctionsListChecked) || undefined}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">Sí</SelectItem>
+                  <SelectItem value="false">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="sanctionsListCheckedDate">Fecha de verificación</Label>
+              <Input
+                id="sanctionsListCheckedDate"
+                name="sanctionsListCheckedDate"
+                type="date"
+                defaultValue={toDateInput(d.sanctionsListCheckedDate)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Revisión en prensa/internet</Label>
+              <Select name="adverseMediaChecked" defaultValue={toBoolString(d.adverseMediaChecked) || undefined}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">Sí</SelectItem>
+                  <SelectItem value="false">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-1 md:max-w-xs">
+            <Label htmlFor="nextReviewDate">Próxima actualización</Label>
+            <Input id="nextReviewDate" name="nextReviewDate" type="date" defaultValue={toDateInput(d.nextReviewDate)} />
+          </div>
+
+          {requiresEnhancedDiligence && (
+            <div className="space-y-4 rounded-md border border-amber-200 bg-amber-50 p-4">
+              <p className="text-sm font-medium text-amber-800">
+                Debida diligencia ampliada requerida (riesgo alto y/o cliente/relacionado es PEP)
+              </p>
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox name="seniorManagementApproved" defaultChecked={d.seniorManagementApproved === true} />
+                Aprobado por alta gerencia
+              </label>
+              <div className="space-y-1">
+                <Label htmlFor="ongoingMonitoringNotes">Notas de monitoreo continuo</Label>
+                <Textarea
+                  id="ongoingMonitoringNotes"
+                  name="ongoingMonitoringNotes"
+                  defaultValue={String(d.ongoingMonitoringNotes ?? "")}
+                />
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {clientType === "COMPANY" && <BeneficialOwnersSection initialOwners={beneficialOwners} />}
 
       <Card>
         <CardHeader>
@@ -364,18 +537,23 @@ function YesNoField({
   detailName,
   value,
   detailValue,
+  onValueChange,
 }: {
   question: string;
   name: string;
   detailName: string;
   value: string;
   detailValue: string;
+  onValueChange?: (value: string) => void;
 }) {
   return (
     <div className="grid grid-cols-1 gap-2 border-b pb-4 last:border-b-0 last:pb-0 md:grid-cols-3">
       <p className="text-sm md:col-span-1">{question}</p>
       <div className="space-y-1">
-        <Select name={name} defaultValue={value || undefined}>
+        <Select
+          name={name}
+          {...(onValueChange ? { value, onValueChange } : { defaultValue: value || undefined })}
+        >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Selecciona" />
           </SelectTrigger>
@@ -389,5 +567,111 @@ function YesNoField({
         <Input name={detailName} placeholder="Especifique (si aplica)" defaultValue={detailValue} />
       </div>
     </div>
+  );
+}
+
+let ownerRowKey = 0;
+
+type OwnerRow = {
+  key: number;
+  fullName: string;
+  idType: string;
+  idNumber: string;
+  ownershipPercent: string;
+  isPep: string;
+  isPepDetail: string;
+};
+
+function emptyOwnerRow(): OwnerRow {
+  return { key: ownerRowKey++, fullName: "", idType: "", idNumber: "", ownershipPercent: "", isPep: "", isPepDetail: "" };
+}
+
+function BeneficialOwnersSection({ initialOwners }: { initialOwners: BeneficialOwnerData[] }) {
+  const [rows, setRows] = useState<OwnerRow[]>(() =>
+    initialOwners.length > 0
+      ? initialOwners.map((o) => ({
+          key: ownerRowKey++,
+          fullName: o.fullName ?? "",
+          idType: o.idType ?? "",
+          idNumber: o.idNumber ?? "",
+          ownershipPercent: o.ownershipPercent ?? "",
+          isPep: toBoolString(o.isPep),
+          isPepDetail: o.isPepDetail ?? "",
+        }))
+      : [emptyOwnerRow()],
+  );
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Beneficiario final</CardTitle>
+        <CardDescription>
+          Persona física que ejerce control efectivo o posee al menos el 20% del capital de la empresa (Guía UAF-CONCLAFIT).
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {rows.map((row, index) => (
+          <div key={row.key} className="grid grid-cols-1 gap-3 border-b pb-4 last:border-b-0 last:pb-0 md:grid-cols-6">
+            <div className="space-y-1 md:col-span-2">
+              <Label>Nombre completo</Label>
+              <Input name="boFullName" defaultValue={row.fullName} />
+            </div>
+            <div className="space-y-1">
+              <Label>Tipo ID</Label>
+              <Select name="boIdType" defaultValue={row.idType || undefined}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(ID_TYPE_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Número</Label>
+              <Input name="boIdNumber" defaultValue={row.idNumber} />
+            </div>
+            <div className="space-y-1">
+              <Label>% Participación</Label>
+              <Input name="boOwnershipPercent" type="number" step="0.01" min="0" max="100" defaultValue={row.ownershipPercent} />
+            </div>
+            <div className="flex items-end gap-2 md:col-span-1">
+              <div className="flex-1 space-y-1">
+                <Label>¿Es PEP?</Label>
+                <Select name="boIsPep" defaultValue={row.isPep || undefined}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecciona" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">Sí</SelectItem>
+                    <SelectItem value="false">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setRows((r) => r.filter((_, i) => i !== index))}
+                aria-label="Quitar beneficiario"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="space-y-1 md:col-span-5">
+              <Label>Detalle si es PEP</Label>
+              <Input name="boIsPepDetail" defaultValue={row.isPepDetail} />
+            </div>
+          </div>
+        ))}
+        <Button type="button" variant="outline" size="sm" onClick={() => setRows((r) => [...r, emptyOwnerRow()])}>
+          <Plus className="mr-1 h-4 w-4" /> Agregar beneficiario
+        </Button>
+      </CardContent>
+    </Card>
   );
 }

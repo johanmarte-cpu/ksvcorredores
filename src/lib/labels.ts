@@ -131,3 +131,15 @@ export const INSURANCE_BRANCH_LABELS: Record<string, string> = {
   FIANZAS: "Fianzas",
   OTRO: "Otro",
 };
+
+export const RISK_LEVEL_LABELS: Record<string, string> = {
+  BAJO: "Bajo",
+  MEDIO: "Medio",
+  ALTO: "Alto",
+};
+
+export const DUE_DILIGENCE_TYPE_LABELS: Record<string, string> = {
+  SIMPLIFICADA: "Simplificada",
+  NORMAL: "Normal",
+  AMPLIADA: "Ampliada",
+};

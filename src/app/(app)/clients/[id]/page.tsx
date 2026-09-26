@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatDate } from "@/lib/format";
-import { POLICY_STATUS_TONE, QUOTE_STATUS_TONE, toneClass, statusClass } from "@/lib/status-colors";
+import { POLICY_STATUS_TONE, QUOTE_STATUS_TONE, RISK_LEVEL_TONE, toneClass, statusClass } from "@/lib/status-colors";
+import { RISK_LEVEL_LABELS } from "@/lib/labels";
 import { NoteForm } from "./note-form";
 import { UploadDocumentForm, DocumentList } from "./document-forms";
 import { EditClientDialog } from "./edit-client-dialog";
@@ -165,6 +166,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {client.knowledgeForm?.riskLevel && (
+              <Badge className={statusClass(RISK_LEVEL_TONE, client.knowledgeForm.riskLevel)}>
+                Riesgo {RISK_LEVEL_LABELS[client.knowledgeForm.riskLevel]}
+              </Badge>
+            )}
             <Badge className={toneClass(client.knowledgeForm ? "emerald" : "amber")}>
               {client.knowledgeForm ? "Completado" : "Pendiente"}
             </Badge>

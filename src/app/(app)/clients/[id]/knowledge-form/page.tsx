@@ -8,7 +8,7 @@ export default async function KnowledgeFormPage({ params }: { params: Promise<{ 
   const { id } = await params;
   const client = await prisma.client.findUnique({
     where: { id },
-    include: { knowledgeForm: true },
+    include: { knowledgeForm: true, beneficialOwners: true },
   });
 
   if (!client) notFound();
@@ -28,6 +28,7 @@ export default async function KnowledgeFormPage({ params }: { params: Promise<{ 
       <KnowledgeForm
         key={client.knowledgeForm?.updatedAt.toISOString() ?? "new"}
         clientId={client.id}
+        clientType={client.type}
         data={
           client.knowledgeForm
             ? {
@@ -36,6 +37,10 @@ export default async function KnowledgeFormPage({ params }: { params: Promise<{ 
               }
             : null
         }
+        beneficialOwners={client.beneficialOwners.map((o) => ({
+          ...o,
+          ownershipPercent: o.ownershipPercent?.toString() ?? null,
+        }))}
       />
     </div>
   );

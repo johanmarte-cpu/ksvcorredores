@@ -12,6 +12,8 @@ import type {
   EconomicActivity,
   MonthlyIncomeRange,
   InsuranceBranch,
+  RiskLevel,
+  DueDiligenceType,
 } from "@/generated/prisma/client";
 
 const THIRD_PARTY_TYPES: ThirdPartyType[] = [
@@ -68,6 +70,18 @@ const schema = z.object({
   relativeIsPepDetail: optionalString,
   insuranceBranch: optionalString,
   insuranceBranchOther: optionalString,
+  riskLevel: optionalString,
+  diligenceType: optionalString,
+  riskFactorsDetail: optionalString,
+  businessRelationshipPurpose: optionalString,
+  sourceOfFunds: optionalString,
+  sourceOfFundsDocumented: optionalString,
+  sanctionsListChecked: optionalString,
+  sanctionsListCheckedDate: optionalString,
+  adverseMediaChecked: optionalString,
+  seniorManagementApproved: optionalString,
+  ongoingMonitoringNotes: optionalString,
+  nextReviewDate: optionalString,
   verificationDate: optionalString,
   verifierCode: optionalString,
 });
@@ -124,16 +138,51 @@ export async function upsertKnowledgeForm(_prevState: { error?: string } | undef
     relativeIsPepDetail: parsed.data.relativeIsPepDetail,
     insuranceBranch: parsed.data.insuranceBranch as InsuranceBranch | undefined,
     insuranceBranchOther: parsed.data.insuranceBranchOther,
+    riskLevel: parsed.data.riskLevel as RiskLevel | undefined,
+    diligenceType: parsed.data.diligenceType as DueDiligenceType | undefined,
+    riskFactorsDetail: parsed.data.riskFactorsDetail,
+    businessRelationshipPurpose: parsed.data.businessRelationshipPurpose,
+    sourceOfFunds: parsed.data.sourceOfFunds,
+    sourceOfFundsDocumented: toBool(parsed.data.sourceOfFundsDocumented),
+    sanctionsListChecked: toBool(parsed.data.sanctionsListChecked),
+    sanctionsListCheckedDate: toDate(parsed.data.sanctionsListCheckedDate),
+    adverseMediaChecked: toBool(parsed.data.adverseMediaChecked),
+    seniorManagementApproved: parsed.data.seniorManagementApproved === "on",
+    seniorManagementApprovedById: parsed.data.seniorManagementApproved === "on" ? session?.user?.id : undefined,
+    ongoingMonitoringNotes: parsed.data.ongoingMonitoringNotes,
+    nextReviewDate: toDate(parsed.data.nextReviewDate),
     verificationDate: toDate(parsed.data.verificationDate),
     verifierCode: parsed.data.verifierCode,
     completedById: session?.user?.id,
   };
 
-  await prisma.clientKnowledgeForm.upsert({
-    where: { clientId: parsed.data.clientId },
-    create: { clientId: parsed.data.clientId, ...data },
-    update: data,
-  });
+  const fullNames = formData.getAll("boFullName").map(String);
+  const idTypes = formData.getAll("boIdType").map(String);
+  const idNumbers = formData.getAll("boIdNumber").map(String);
+  const percents = formData.getAll("boOwnershipPercent").map(String);
+  const isPeps = formData.getAll("boIsPep").map(String);
+  const pepDetails = formData.getAll("boIsPepDetail").map(String);
+
+  const owners = fullNames
+    .map((fullName, i) => ({
+      fullName: fullName.trim(),
+      idType: (idTypes[i] || undefined) as IdentificationType | undefined,
+      idNumber: idNumbers[i]?.trim() || undefined,
+      ownershipPercent: percents[i] ? Number(percents[i]) : undefined,
+      isPep: toBool(isPeps[i]),
+      isPepDetail: pepDetails[i]?.trim() || undefined,
+    }))
+    .filter((o) => o.fullName.length > 0);
+
+  await prisma.$transaction([
+    prisma.clientKnowledgeForm.upsert({
+      where: { clientId: parsed.data.clientId },
+      create: { clientId: parsed.data.clientId, ...data },
+      update: data,
+    }),
+    prisma.beneficialOwner.deleteMany({ where: { clientId: parsed.data.clientId } }),
+    ...owners.map((owner) => prisma.beneficialOwner.create({ data: { clientId: parsed.data.clientId, ...owner } })),
+  ]);
 
   revalidatePath(`/clients/${parsed.data.clientId}`);
   revalidatePath(`/clients/${parsed.data.clientId}/knowledge-form`);
