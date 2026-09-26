@@ -1,15 +1,13 @@
 import Link from "next/link";
 import { ShieldCheck, RefreshCw, FileText, AlertTriangle, Wallet, Percent, type LucideIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { formatCurrency, formatDate, clientDisplayName } from "@/lib/format";
-import { toneClass } from "@/lib/status-colors";
-
-// Colores por categoría (identidad fija por tarjeta, nunca por rango de valor).
-const INSURER_DOT_COLORS = ["bg-blue-500", "bg-amber-500", "bg-violet-500", "bg-rose-500", "bg-emerald-500", "bg-cyan-500"];
+import { formatCurrency, clientDisplayName, lastMonthKeys, monthKeyOf } from "@/lib/format";
+import { RenewalsPanel, type RenewalRow } from "@/components/dashboard/renewals-panel";
+import { InsurerBreakdown, type InsurerRow } from "@/components/dashboard/insurer-breakdown";
+import { TrendCard } from "@/components/dashboard/trend-card";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -17,6 +15,8 @@ export default async function DashboardPage() {
   const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const months6 = lastMonthKeys(6);
+  const earliestMonth6 = new Date(months6[0].year, months6[0].month, 1);
 
   const [
     activePolicies,
@@ -27,6 +27,8 @@ export default async function DashboardPage() {
     commissionsThisMonth,
     upcomingRenewals,
     byInsurer,
+    payments6,
+    commissions6,
   ] = await Promise.all([
     prisma.policy.count({ where: { status: "ACTIVE" } }),
     prisma.policy.count({ where: { status: "ACTIVE", endDate: { gte: now, lte: in30 } } }),
@@ -43,13 +45,22 @@ export default async function DashboardPage() {
     prisma.policy.findMany({
       where: { status: "ACTIVE", endDate: { gte: now, lte: in30 } },
       orderBy: { endDate: "asc" },
-      take: 8,
+      take: 25,
       include: { client: true, insurer: true },
     }),
     prisma.policy.groupBy({
       by: ["insurerId"],
       where: { status: "ACTIVE" },
       _count: { _all: true },
+      _sum: { premium: true },
+    }),
+    prisma.policyPayment.findMany({
+      where: { status: "PAID", paidDate: { gte: earliestMonth6 } },
+      select: { amount: true, paidDate: true },
+    }),
+    prisma.policyCommission.findMany({
+      where: { period: { in: months6.map((m) => m.key) } },
+      select: { period: true, receivedAmount: true },
     }),
   ]);
 
@@ -61,10 +72,34 @@ export default async function DashboardPage() {
   const hour = now.getHours();
   const greeting = hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
 
-  const sortedInsurers = [...byInsurer].sort((a, b) => b._count._all - a._count._all);
-  const topInsurers = sortedInsurers.slice(0, 5);
-  const otherInsurersCount = sortedInsurers.slice(5).reduce((sum, row) => sum + row._count._all, 0);
-  const maxInsurerCount = Math.max(1, ...sortedInsurers.map((r) => r._count._all));
+  const insurerRows: InsurerRow[] = byInsurer.map((row) => ({
+    insurerId: row.insurerId,
+    name: insurerName(row.insurerId),
+    count: row._count._all,
+    premium: Number(row._sum.premium ?? 0),
+  }));
+
+  const renewalRows: RenewalRow[] = upcomingRenewals.map((p) => ({
+    id: p.id,
+    policyNumber: p.policyNumber,
+    clientName: clientDisplayName(p.client),
+    insurerName: p.insurer.name,
+    endDate: p.endDate,
+    daysLeft: Math.ceil((p.endDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)),
+  }));
+
+  const paymentsByMonth = new Map<string, number>();
+  for (const payment of payments6) {
+    if (!payment.paidDate) continue;
+    const key = monthKeyOf(payment.paidDate);
+    paymentsByMonth.set(key, (paymentsByMonth.get(key) ?? 0) + Number(payment.amount));
+  }
+  const commissionsByMonth = new Map<string, number>();
+  for (const c of commissions6) {
+    commissionsByMonth.set(c.period, (commissionsByMonth.get(c.period) ?? 0) + Number(c.receivedAmount ?? 0));
+  }
+  const premiumTrend = months6.map((m) => ({ label: m.label, value: paymentsByMonth.get(m.key) ?? 0 }));
+  const commissionTrend = months6.map((m) => ({ label: m.label, value: commissionsByMonth.get(m.key) ?? 0 }));
 
   return (
     <div className="space-y-6">
@@ -76,7 +111,14 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <StatCard label="Pólizas activas" value={activePolicies} href="/policies" icon={ShieldCheck} color="blue" />
+        <StatCard
+          label="Pólizas activas"
+          value={activePolicies}
+          href="/policies"
+          icon={ShieldCheck}
+          color="blue"
+          hint="Pólizas con estado ACTIVA en este momento."
+        />
         <StatCard
           label="Por vencer (30d)"
           value={expiringPolicies}
@@ -84,8 +126,16 @@ export default async function DashboardPage() {
           icon={RefreshCw}
           color="amber"
           warn={expiringPolicies > 0}
+          hint="Pólizas activas cuya fecha de vencimiento cae en los próximos 30 días."
         />
-        <StatCard label="Cotizaciones pendientes" value={pendingQuotes} href="/quotes" icon={FileText} color="violet" />
+        <StatCard
+          label="Cotizaciones pendientes"
+          value={pendingQuotes}
+          href="/quotes"
+          icon={FileText}
+          color="violet"
+          hint="Cotizaciones en borrador, enviadas, en revisión o comparadas."
+        />
         <StatCard
           label="Reclamaciones abiertas"
           value={openClaims}
@@ -93,6 +143,7 @@ export default async function DashboardPage() {
           icon={AlertTriangle}
           color="rose"
           warn={openClaims > 0}
+          hint="Reclamaciones que aún no están cerradas, pagadas o rechazadas."
         />
         <StatCard
           label="Primas cobradas (mes)"
@@ -100,6 +151,7 @@ export default async function DashboardPage() {
           href="/commissions"
           icon={Wallet}
           color="emerald"
+          hint="Suma de cuotas pagadas con fecha de pago dentro del mes en curso."
         />
         <StatCard
           label="Comisiones (mes)"
@@ -107,8 +159,11 @@ export default async function DashboardPage() {
           href="/commissions"
           icon={Percent}
           color="cyan"
+          hint="Comisiones esperadas para el período actual (todas las pólizas)."
         />
       </div>
+
+      <TrendCard premiums={premiumTrend} commissions={commissionTrend} />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
@@ -116,40 +171,7 @@ export default async function DashboardPage() {
             <CardTitle className="text-base">Renovaciones próximas</CardTitle>
           </CardHeader>
           <CardContent>
-            {upcomingRenewals.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No hay pólizas por vencer en los próximos 30 días.</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Póliza</TableHead>
-                    <TableHead>Aseguradora</TableHead>
-                    <TableHead>Vence</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {upcomingRenewals.map((p) => {
-                    const daysLeft = Math.ceil((p.endDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
-                    const urgent = daysLeft <= 7;
-                    return (
-                      <TableRow key={p.id}>
-                        <TableCell>{clientDisplayName(p.client)}</TableCell>
-                        <TableCell>
-                          <Link href={`/policies/${p.id}`} className="underline underline-offset-2">
-                            {p.policyNumber}
-                          </Link>
-                        </TableCell>
-                        <TableCell>{p.insurer.name}</TableCell>
-                        <TableCell>
-                          <Badge className={toneClass(urgent ? "rose" : "amber")}>{formatDate(p.endDate)}</Badge>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
+            <RenewalsPanel renewals={renewalRows} />
           </CardContent>
         </Card>
 
@@ -157,34 +179,8 @@ export default async function DashboardPage() {
           <CardHeader>
             <CardTitle className="text-base">Pólizas activas por aseguradora</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {byInsurer.length === 0 && <p className="text-sm text-muted-foreground">Sin datos aún.</p>}
-            {topInsurers.map((row, index) => (
-              <div key={row.insurerId} className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <span className={`h-2 w-2 shrink-0 rounded-full ${INSURER_DOT_COLORS[index % INSURER_DOT_COLORS.length]}`} />
-                    {insurerName(row.insurerId)}
-                  </span>
-                  <span className="font-medium">{row._count._all}</span>
-                </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                  <div
-                    className={`h-full rounded-full ${INSURER_DOT_COLORS[index % INSURER_DOT_COLORS.length]}`}
-                    style={{ width: `${(row._count._all / maxInsurerCount) * 100}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-            {otherInsurersCount > 0 && (
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span className="flex items-center gap-2">
-                  <span className="h-2 w-2 shrink-0 rounded-full bg-slate-400" />
-                  Otras
-                </span>
-                <span className="font-medium">{otherInsurersCount}</span>
-              </div>
-            )}
+          <CardContent>
+            <InsurerBreakdown rows={insurerRows} />
           </CardContent>
         </Card>
       </div>
@@ -208,6 +204,7 @@ function StatCard({
   icon: Icon,
   color,
   warn,
+  hint,
 }: {
   label: string;
   value: string | number;
@@ -215,9 +212,10 @@ function StatCard({
   icon: LucideIcon;
   color: keyof typeof STAT_CARD_COLORS;
   warn?: boolean;
+  hint?: string;
 }) {
   const palette = STAT_CARD_COLORS[color];
-  return (
+  const card = (
     <Link href={href}>
       <Card className="transition-colors hover:border-primary">
         <CardContent className="flex items-start justify-between gap-2 p-4">
@@ -231,5 +229,14 @@ function StatCard({
         </CardContent>
       </Card>
     </Link>
+  );
+
+  if (!hint) return card;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{card}</TooltipTrigger>
+      <TooltipContent>{hint}</TooltipContent>
+    </Tooltip>
   );
 }
