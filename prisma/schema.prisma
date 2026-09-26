@@ -690,6 +690,14 @@ model SystemSettings {
   companyEmail   String?
   companyAddress String?
 
+  // Envío de correo (Resend). Si resendApiKey está vacío se usa la variable de entorno RESEND_API_KEY.
+  emailFromName          String?
+  emailFromAddress       String?
+  resendApiKey           String?
+  notifyPaymentReminders Boolean @default(true)
+  notifyRenewalNotices   Boolean @default(true)
+  notifyBirthdays        Boolean @default(true)
+
   updatedAt   DateTime @updatedAt
   updatedById String?
   updatedBy   User?    @relation(fields: [updatedById], references: [id])

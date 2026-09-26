@@ -16,6 +16,12 @@ const settingsSchema = z.object({
   companyPhone: z.string().optional(),
   companyEmail: z.string().email("Correo inválido").optional().or(z.literal("")),
   companyAddress: z.string().optional(),
+  emailFromName: z.string().optional(),
+  emailFromAddress: z.string().email("Correo del remitente inválido").optional().or(z.literal("")),
+  resendApiKey: z.string().optional(),
+  notifyPaymentReminders: z.coerce.boolean(),
+  notifyRenewalNotices: z.coerce.boolean(),
+  notifyBirthdays: z.coerce.boolean(),
 });
 
 export async function updateSettings(_prevState: { error?: string; success?: boolean } | undefined, formData: FormData) {
@@ -32,36 +38,41 @@ export async function updateSettings(_prevState: { error?: string; success?: boo
     companyPhone: formData.get("companyPhone"),
     companyEmail: formData.get("companyEmail"),
     companyAddress: formData.get("companyAddress"),
+    emailFromName: formData.get("emailFromName"),
+    emailFromAddress: formData.get("emailFromAddress"),
+    resendApiKey: formData.get("resendApiKey"),
+    notifyPaymentReminders: formData.get("notifyPaymentReminders") === "on",
+    notifyRenewalNotices: formData.get("notifyRenewalNotices") === "on",
+    notifyBirthdays: formData.get("notifyBirthdays") === "on",
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
 
+  // El campo de API key se deja en blanco intencionalmente al recargar la página (no se
+  // reenvía un secreto ya guardado al cliente); solo se sobrescribe si el admin escribió un valor nuevo.
+  const resendApiKey = parsed.data.resendApiKey?.trim() ? parsed.data.resendApiKey.trim() : undefined;
+
+  const sharedData = {
+    itbisRate: parsed.data.itbisRate,
+    downPaymentRate: parsed.data.downPaymentRate,
+    paymentReminderDays: parsed.data.paymentReminderDays,
+    renewalNoticeDays: parsed.data.renewalNoticeDays,
+    companyName: parsed.data.companyName,
+    companyTaxId: parsed.data.companyTaxId || null,
+    companyPhone: parsed.data.companyPhone || null,
+    companyEmail: parsed.data.companyEmail || null,
+    companyAddress: parsed.data.companyAddress || null,
+    emailFromName: parsed.data.emailFromName || null,
+    emailFromAddress: parsed.data.emailFromAddress || null,
+    notifyPaymentReminders: parsed.data.notifyPaymentReminders,
+    notifyRenewalNotices: parsed.data.notifyRenewalNotices,
+    notifyBirthdays: parsed.data.notifyBirthdays,
+    updatedById: session.user.id,
+  };
+
   await prisma.systemSettings.upsert({
     where: { id: SETTINGS_ID },
-    update: {
-      itbisRate: parsed.data.itbisRate,
-      downPaymentRate: parsed.data.downPaymentRate,
-      paymentReminderDays: parsed.data.paymentReminderDays,
-      renewalNoticeDays: parsed.data.renewalNoticeDays,
-      companyName: parsed.data.companyName,
-      companyTaxId: parsed.data.companyTaxId || null,
-      companyPhone: parsed.data.companyPhone || null,
-      companyEmail: parsed.data.companyEmail || null,
-      companyAddress: parsed.data.companyAddress || null,
-      updatedById: session.user.id,
-    },
-    create: {
-      id: SETTINGS_ID,
-      itbisRate: parsed.data.itbisRate,
-      downPaymentRate: parsed.data.downPaymentRate,
-      paymentReminderDays: parsed.data.paymentReminderDays,
-      renewalNoticeDays: parsed.data.renewalNoticeDays,
-      companyName: parsed.data.companyName,
-      companyTaxId: parsed.data.companyTaxId || null,
-      companyPhone: parsed.data.companyPhone || null,
-      companyEmail: parsed.data.companyEmail || null,
-      companyAddress: parsed.data.companyAddress || null,
-      updatedById: session.user.id,
-    },
+    update: { ...sharedData, ...(resendApiKey !== undefined && { resendApiKey }) },
+    create: { id: SETTINGS_ID, ...sharedData, resendApiKey: resendApiKey ?? null },
   });
 
   revalidatePath("/settings");

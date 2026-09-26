@@ -22,91 +22,108 @@ export async function GET(request: NextRequest) {
   }
 
   const settings = await getSettings();
+  const apiKey = settings.resendApiKey || process.env.RESEND_API_KEY || null;
+  const from = settings.emailFromAddress
+    ? `${settings.emailFromName || settings.companyName} <${settings.emailFromAddress}>`
+    : (process.env.EMAIL_FROM ?? `${settings.companyName} <notificaciones@ksvcorredores.com>`);
+
   const results = { paymentReminders: 0, renewalNotices: 0, birthdays: 0, errors: [] as string[] };
 
   // ── Recordatorios de pago ──
-  const paymentRange = dayRange(settings.paymentReminderDays);
-  const duePayments = await prisma.policyPayment.findMany({
-    where: {
-      status: "PENDING",
-      reminderSentAt: null,
-      dueDate: { gte: paymentRange.start, lt: paymentRange.end },
-    },
-    include: { policy: { include: { client: true } } },
-  });
-  for (const payment of duePayments) {
-    const { client } = payment.policy;
-    if (!client.email) continue;
-    try {
-      await sendEmail({
-        to: client.email,
-        subject: `Recordatorio de pago — Póliza ${payment.policy.policyNumber}`,
-        html: paymentReminderEmail({
-          clientName: clientDisplayName(client),
-          policyNumber: payment.policy.policyNumber,
-          amount: Number(payment.amount),
-          dueDate: payment.dueDate,
-          companyName: settings.companyName,
-        }),
-      });
-      await prisma.policyPayment.update({ where: { id: payment.id }, data: { reminderSentAt: new Date() } });
-      results.paymentReminders++;
-    } catch (e) {
-      results.errors.push(`payment ${payment.id}: ${e instanceof Error ? e.message : "error"}`);
+  if (settings.notifyPaymentReminders) {
+    const paymentRange = dayRange(settings.paymentReminderDays);
+    const duePayments = await prisma.policyPayment.findMany({
+      where: {
+        status: "PENDING",
+        reminderSentAt: null,
+        dueDate: { gte: paymentRange.start, lt: paymentRange.end },
+      },
+      include: { policy: { include: { client: true } } },
+    });
+    for (const payment of duePayments) {
+      const { client } = payment.policy;
+      if (!client.email) continue;
+      try {
+        await sendEmail({
+          to: client.email,
+          subject: `Recordatorio de pago — Póliza ${payment.policy.policyNumber}`,
+          html: paymentReminderEmail({
+            clientName: clientDisplayName(client),
+            policyNumber: payment.policy.policyNumber,
+            amount: Number(payment.amount),
+            dueDate: payment.dueDate,
+            companyName: settings.companyName,
+          }),
+          apiKey,
+          from,
+        });
+        await prisma.policyPayment.update({ where: { id: payment.id }, data: { reminderSentAt: new Date() } });
+        results.paymentReminders++;
+      } catch (e) {
+        results.errors.push(`payment ${payment.id}: ${e instanceof Error ? e.message : "error"}`);
+      }
     }
   }
 
   // ── Aviso de renovación ──
-  const renewalRange = dayRange(settings.renewalNoticeDays);
-  const expiringPolicies = await prisma.policy.findMany({
-    where: {
-      status: "ACTIVE",
-      renewalNoticeSentAt: null,
-      endDate: { gte: renewalRange.start, lt: renewalRange.end },
-    },
-    include: { client: true, insurer: true },
-  });
-  for (const policy of expiringPolicies) {
-    if (!policy.client.email) continue;
-    try {
-      await sendEmail({
-        to: policy.client.email,
-        subject: `Tu póliza ${policy.policyNumber} está próxima a vencer`,
-        html: renewalNoticeEmail({
-          clientName: clientDisplayName(policy.client),
-          policyNumber: policy.policyNumber,
-          insurerName: policy.insurer.name,
-          endDate: policy.endDate,
-          companyName: settings.companyName,
-        }),
-      });
-      await prisma.policy.update({ where: { id: policy.id }, data: { renewalNoticeSentAt: new Date() } });
-      results.renewalNotices++;
-    } catch (e) {
-      results.errors.push(`policy ${policy.id}: ${e instanceof Error ? e.message : "error"}`);
+  if (settings.notifyRenewalNotices) {
+    const renewalRange = dayRange(settings.renewalNoticeDays);
+    const expiringPolicies = await prisma.policy.findMany({
+      where: {
+        status: "ACTIVE",
+        renewalNoticeSentAt: null,
+        endDate: { gte: renewalRange.start, lt: renewalRange.end },
+      },
+      include: { client: true, insurer: true },
+    });
+    for (const policy of expiringPolicies) {
+      if (!policy.client.email) continue;
+      try {
+        await sendEmail({
+          to: policy.client.email,
+          subject: `Tu póliza ${policy.policyNumber} está próxima a vencer`,
+          html: renewalNoticeEmail({
+            clientName: clientDisplayName(policy.client),
+            policyNumber: policy.policyNumber,
+            insurerName: policy.insurer.name,
+            endDate: policy.endDate,
+            companyName: settings.companyName,
+          }),
+          apiKey,
+          from,
+        });
+        await prisma.policy.update({ where: { id: policy.id }, data: { renewalNoticeSentAt: new Date() } });
+        results.renewalNotices++;
+      } catch (e) {
+        results.errors.push(`policy ${policy.id}: ${e instanceof Error ? e.message : "error"}`);
+      }
     }
   }
 
   // ── Cumpleaños ──
-  const today = new Date();
-  const currentYear = today.getUTCFullYear();
-  const birthdayClients = await prisma.client.findMany({
-    where: { type: "PERSON", birthDate: { not: null }, email: { not: null } },
-  });
-  for (const client of birthdayClients) {
-    if (!client.birthDate || !client.email) continue;
-    const sameDay = client.birthDate.getUTCMonth() === today.getUTCMonth() && client.birthDate.getUTCDate() === today.getUTCDate();
-    if (!sameDay || client.lastBirthdayEmailYear === currentYear) continue;
-    try {
-      await sendEmail({
-        to: client.email,
-        subject: `¡Feliz cumpleaños de parte de ${settings.companyName}!`,
-        html: birthdayEmail({ clientName: clientDisplayName(client), companyName: settings.companyName }),
-      });
-      await prisma.client.update({ where: { id: client.id }, data: { lastBirthdayEmailYear: currentYear } });
-      results.birthdays++;
-    } catch (e) {
-      results.errors.push(`client ${client.id}: ${e instanceof Error ? e.message : "error"}`);
+  if (settings.notifyBirthdays) {
+    const today = new Date();
+    const currentYear = today.getUTCFullYear();
+    const birthdayClients = await prisma.client.findMany({
+      where: { type: "PERSON", birthDate: { not: null }, email: { not: null } },
+    });
+    for (const client of birthdayClients) {
+      if (!client.birthDate || !client.email) continue;
+      const sameDay = client.birthDate.getUTCMonth() === today.getUTCMonth() && client.birthDate.getUTCDate() === today.getUTCDate();
+      if (!sameDay || client.lastBirthdayEmailYear === currentYear) continue;
+      try {
+        await sendEmail({
+          to: client.email,
+          subject: `¡Feliz cumpleaños de parte de ${settings.companyName}!`,
+          html: birthdayEmail({ clientName: clientDisplayName(client), companyName: settings.companyName }),
+          apiKey,
+          from,
+        });
+        await prisma.client.update({ where: { id: client.id }, data: { lastBirthdayEmailYear: currentYear } });
+        results.birthdays++;
+      } catch (e) {
+        results.errors.push(`client ${client.id}: ${e instanceof Error ? e.message : "error"}`);
+      }
     }
   }
 

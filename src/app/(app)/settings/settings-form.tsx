@@ -17,6 +17,12 @@ export function SettingsForm(props: {
   companyPhone: string;
   companyEmail: string;
   companyAddress: string;
+  emailFromName: string;
+  emailFromAddress: string;
+  hasResendApiKey: boolean;
+  notifyPaymentReminders: boolean;
+  notifyRenewalNotices: boolean;
+  notifyBirthdays: boolean;
 }) {
   const [state, formAction, pending] = useActionState(updateSettings, undefined);
 
@@ -99,6 +105,85 @@ export function SettingsForm(props: {
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="companyAddress">Dirección</Label>
             <Input id="companyAddress" name="companyAddress" defaultValue={props.companyAddress} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Correo</CardTitle>
+          <CardDescription>Remitente y clave de Resend usados para enviar avisos a los clientes.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="emailFromName">Nombre del remitente</Label>
+              <Input
+                id="emailFromName"
+                name="emailFromName"
+                autoComplete="off"
+                placeholder={props.companyName}
+                defaultValue={props.emailFromName}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="emailFromAddress">Correo del remitente</Label>
+              <Input
+                id="emailFromAddress"
+                name="emailFromAddress"
+                type="email"
+                autoComplete="off"
+                placeholder="notificaciones@ksvcorredores.com"
+                defaultValue={props.emailFromAddress}
+              />
+              <p className="text-xs text-muted-foreground">Debe pertenecer a un dominio verificado en Resend.</p>
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="resendApiKey">Resend API Key</Label>
+              <Input
+                id="resendApiKey"
+                name="resendApiKey"
+                type="password"
+                autoComplete="new-password"
+                placeholder={props.hasResendApiKey ? "•••••••••••• (configurada — deja en blanco para no cambiarla)" : "re_xxxxxxxxxxxx"}
+              />
+              <p className="text-xs text-muted-foreground">
+                {props.hasResendApiKey
+                  ? "Ya hay una clave configurada. Escribe una nueva solo si quieres reemplazarla."
+                  : "Sin esta clave (o la variable de entorno RESEND_API_KEY) los correos no se envían."}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3 border-t pt-4">
+            <p className="text-sm font-medium">Notificaciones automáticas a clientes</p>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="notifyPaymentReminders"
+                defaultChecked={props.notifyPaymentReminders}
+                className="h-4 w-4 rounded border-input accent-[var(--brand-blue)]"
+              />
+              Recordatorios de pago pendiente
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="notifyRenewalNotices"
+                defaultChecked={props.notifyRenewalNotices}
+                className="h-4 w-4 rounded border-input accent-[var(--brand-blue)]"
+              />
+              Avisos de renovación
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="notifyBirthdays"
+                defaultChecked={props.notifyBirthdays}
+                className="h-4 w-4 rounded border-input accent-[var(--brand-blue)]"
+              />
+              Felicitaciones de cumpleaños
+            </label>
           </div>
         </CardContent>
       </Card>

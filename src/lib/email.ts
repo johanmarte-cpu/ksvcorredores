@@ -1,14 +1,24 @@
 import { Resend } from "resend";
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const FROM = process.env.EMAIL_FROM ?? "KSV Corredores de Seguros <notificaciones@ksvcorredores.com>";
-
-export async function sendEmail({ to, subject, html }: { to: string; subject: string; html: string }) {
-  if (!resend) {
-    console.warn("RESEND_API_KEY no configurado — correo no enviado:", subject, "->", to);
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  apiKey,
+  from,
+}: {
+  to: string;
+  subject: string;
+  html: string;
+  apiKey: string | null;
+  from: string;
+}) {
+  if (!apiKey) {
+    console.warn("Resend API key no configurada — correo no enviado:", subject, "->", to);
     return { skipped: true };
   }
-  const result = await resend.emails.send({ from: FROM, to, subject, html });
+  const resend = new Resend(apiKey);
+  const result = await resend.emails.send({ from, to, subject, html });
   if (result.error) throw new Error(result.error.message);
   return result;
 }

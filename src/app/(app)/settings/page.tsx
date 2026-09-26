@@ -26,6 +26,12 @@ export default async function SettingsPage() {
         companyPhone={settings.companyPhone ?? ""}
         companyEmail={settings.companyEmail ?? ""}
         companyAddress={settings.companyAddress ?? ""}
+        emailFromName={settings.emailFromName ?? ""}
+        emailFromAddress={settings.emailFromAddress ?? ""}
+        hasResendApiKey={!!settings.resendApiKey || !!process.env.RESEND_API_KEY}
+        notifyPaymentReminders={settings.notifyPaymentReminders}
+        notifyRenewalNotices={settings.notifyRenewalNotices}
+        notifyBirthdays={settings.notifyBirthdays}
       />
     </div>
   );
