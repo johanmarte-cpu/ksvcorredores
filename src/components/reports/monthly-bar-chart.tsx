@@ -47,8 +47,10 @@ export function MonthlyBarChart({
 
 export function StackedStatusBar({
   segments,
+  formatValue = (value: number) => value.toLocaleString("es-DO"),
 }: {
   segments: { label: string; value: number; color: string }[];
+  formatValue?: (value: number) => string;
 }) {
   const total = segments.reduce((sum, s) => sum + s.value, 0) || 1;
 
@@ -58,7 +60,7 @@ export function StackedStatusBar({
         {segments.map((s) => (
           <div
             key={s.label}
-            title={`${s.label}: ${s.value}`}
+            title={`${s.label}: ${formatValue(s.value)}`}
             style={{ width: `${(s.value / total) * 100}%`, backgroundColor: s.value > 0 ? s.color : "transparent" }}
           />
         ))}
@@ -67,7 +69,7 @@ export function StackedStatusBar({
         {segments.map((s) => (
           <div key={s.label} className="flex items-center gap-1.5 text-muted-foreground">
             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: s.color }} />
-            {s.label} <span className="font-medium text-foreground">{s.value}</span>
+            {s.label} <span className="font-medium text-foreground">{formatValue(s.value)}</span>
           </div>
         ))}
       </div>

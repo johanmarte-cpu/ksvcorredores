@@ -7,7 +7,10 @@ import { MonthlyBarChart, StackedStatusBar } from "@/components/reports/monthly-
 
 const INACTIVE_STATUSES = ["EXPIRED", "CANCELLED", "RENEWED"] as const;
 
-export default async function ReportsPage() {
+export default async function ReportsPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab } = await searchParams;
+  const defaultTab = tab === "collections" ? "collections" : "portfolio";
+
   const months = lastMonthKeys(12);
   const earliestMonth = new Date(months[0].year, months[0].month, 1);
 
@@ -19,6 +22,8 @@ export default async function ReportsPage() {
     recentClients,
     topClientPolicies,
     clientsByExecutive,
+    pendingPayments,
+    allPaidPayments,
   ] = await Promise.all([
     prisma.policy.findMany({
       select: { status: true, premium: true, insurer: { select: { name: true } } },
@@ -41,6 +46,14 @@ export default async function ReportsPage() {
       select: { premium: true, client: true },
     }),
     prisma.client.groupBy({ by: ["assignedToId"], _count: { _all: true } }),
+    prisma.policyPayment.findMany({
+      where: { status: "PENDING" },
+      select: { amount: true, dueDate: true, policy: { select: { policyNumber: true, clientId: true, client: true } } },
+    }),
+    prisma.policyPayment.findMany({
+      where: { status: "PAID" },
+      select: { dueDate: true, paidDate: true },
+    }),
   ]);
 
   // ── Cartera activa / inactiva ──────────────────────────────
@@ -108,14 +121,47 @@ export default async function ReportsPage() {
   const executives = await prisma.user.findMany({ where: { id: { in: executiveIds } } });
   const executiveName = (id: string | null) => (id ? executives.find((e) => e.id === id)?.name ?? "—" : "Sin asignar");
 
+  // ── Cobros ──────────────────────────────
+  const now = new Date();
+  const totalPending = pendingPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const AGING_BUCKETS = [
+    { key: "current", label: "Al día", color: "var(--brand-green)" },
+    { key: "d1_30", label: "1-30 días", color: "#eda100" },
+    { key: "d31_60", label: "31-60 días", color: "#eb6834" },
+    { key: "d61_90", label: "61-90 días", color: "#e34948" },
+    { key: "d90plus", label: "+90 días", color: "#9f1239" },
+  ] as const;
+  const aging: Record<string, { count: number; amount: number }> = Object.fromEntries(
+    AGING_BUCKETS.map((b) => [b.key, { count: 0, amount: 0 }]),
+  );
+  const byClientBalance = new Map<string, { name: string; amount: number; count: number }>();
+  for (const p of pendingPayments) {
+    const daysOverdue = Math.floor((now.getTime() - p.dueDate.getTime()) / (24 * 60 * 60 * 1000));
+    const bucketKey =
+      daysOverdue <= 0 ? "current" : daysOverdue <= 30 ? "d1_30" : daysOverdue <= 60 ? "d31_60" : daysOverdue <= 90 ? "d61_90" : "d90plus";
+    aging[bucketKey].count++;
+    aging[bucketKey].amount += Number(p.amount);
+
+    const entry = byClientBalance.get(p.policy.clientId) ?? { name: clientDisplayName(p.policy.client), amount: 0, count: 0 };
+    entry.amount += Number(p.amount);
+    entry.count += 1;
+    byClientBalance.set(p.policy.clientId, entry);
+  }
+  const topDebtors = [...byClientBalance.values()].sort((a, b) => b.amount - a.amount).slice(0, 10);
+  const totalOverdueAmount = AGING_BUCKETS.filter((b) => b.key !== "current").reduce((sum, b) => sum + aging[b.key].amount, 0);
+
+  const onTimeCount = allPaidPayments.filter((p) => p.paidDate && p.paidDate.getTime() <= p.dueDate.getTime()).length;
+  const onTimeRate = allPaidPayments.length > 0 ? (onTimeCount / allPaidPayments.length) * 100 : null;
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Reportes</h1>
 
-      <Tabs defaultValue="portfolio">
+      <Tabs defaultValue={defaultTab}>
         <TabsList>
           <TabsTrigger value="portfolio">Cartera activa/inactiva</TabsTrigger>
           <TabsTrigger value="income">Ingresos por mes</TabsTrigger>
+          <TabsTrigger value="collections">Cobros</TabsTrigger>
           <TabsTrigger value="clients">Clientes</TabsTrigger>
         </TabsList>
 
@@ -222,6 +268,87 @@ export default async function ReportsPage() {
                       <TableCell>{formatCurrency(paymentsByMonth.get(m.key) ?? 0)}</TableCell>
                       <TableCell>{formatCurrency(commissionsByMonth.get(m.key)?.expected ?? 0)}</TableCell>
                       <TableCell>{formatCurrency(commissionsByMonth.get(m.key)?.received ?? 0)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ── Cobros ── */}
+        <TabsContent value="collections" className="space-y-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+            <StatCard label="Total pendiente" value={formatCurrency(totalPending)} sub={`${pendingPayments.length} cuota(s)`} />
+            <StatCard
+              label="Total vencido"
+              value={formatCurrency(totalOverdueAmount)}
+              sub={`${pendingPayments.length - aging.current.count} cuota(s)`}
+            />
+            <StatCard label="Cobrado a tiempo" value={onTimeRate === null ? "—" : `${onTimeRate.toFixed(0)}%`} sub="histórico" />
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Antigüedad de saldos vencidos</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <StackedStatusBar
+                segments={AGING_BUCKETS.map((b) => ({ label: b.label, value: aging[b.key].amount, color: b.color }))}
+                formatValue={(v) => formatCurrency(v)}
+              />
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Rango</TableHead>
+                    <TableHead>Cuotas</TableHead>
+                    <TableHead>Monto</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {AGING_BUCKETS.map((b) => (
+                    <TableRow key={b.key}>
+                      <TableCell>
+                        <span className="flex items-center gap-2">
+                          <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: b.color }} />
+                          {b.label}
+                        </span>
+                      </TableCell>
+                      <TableCell>{aging[b.key].count}</TableCell>
+                      <TableCell>{formatCurrency(aging[b.key].amount)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Clientes con mayor saldo pendiente</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Cuotas</TableHead>
+                    <TableHead>Saldo pendiente</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {topDebtors.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
+                        Sin cobros pendientes.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {topDebtors.map((d) => (
+                    <TableRow key={d.name}>
+                      <TableCell>{d.name}</TableCell>
+                      <TableCell>{d.count}</TableCell>
+                      <TableCell>{formatCurrency(d.amount)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

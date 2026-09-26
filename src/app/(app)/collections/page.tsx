@@ -1,16 +1,41 @@
 import Link from "next/link";
-import { Wallet, AlertTriangle, Clock } from "lucide-react";
+import { Wallet, AlertTriangle, Clock, BarChart3 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatCurrency, formatDate, daysUntil } from "@/lib/format";
 import { toneClass } from "@/lib/status-colors";
 import { MarkPaidCell } from "./collections-actions-cell";
 
-export default async function CollectionsPage() {
+export default async function CollectionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ policyNumber?: string; client?: string }>;
+}) {
+  const { policyNumber, client } = await searchParams;
+
   const payments = await prisma.policyPayment.findMany({
-    where: { status: "PENDING" },
+    where: {
+      status: "PENDING",
+      policy: {
+        ...(policyNumber ? { policyNumber: { contains: policyNumber, mode: "insensitive" } } : {}),
+        ...(client
+          ? {
+              client: {
+                OR: [
+                  { firstName: { contains: client, mode: "insensitive" } },
+                  { lastName: { contains: client, mode: "insensitive" } },
+                  { companyName: { contains: client, mode: "insensitive" } },
+                ],
+              },
+            }
+          : {}),
+      },
+    },
     orderBy: { dueDate: "asc" },
     include: { policy: { include: { client: true, insurer: true } } },
   });
@@ -24,9 +49,41 @@ export default async function CollectionsPage() {
   const totalOverdue = overdue.reduce((sum, p) => sum + Number(p.amount), 0);
   const totalDueSoon = dueSoon.reduce((sum, p) => sum + Number(p.amount), 0);
 
+  const hasFilters = !!(policyNumber || client);
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Cobros</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Cobros</h1>
+        <Button asChild size="sm" variant="outline">
+          <Link href="/reports?tab=collections">
+            <BarChart3 className="mr-1 h-4 w-4" /> Reporte de cobros
+          </Link>
+        </Button>
+      </div>
+
+      <Card>
+        <CardContent className="p-4">
+          <form className="flex flex-wrap items-end gap-4" action="/collections">
+            <div className="space-y-1">
+              <Label htmlFor="policyNumber">Número de póliza</Label>
+              <Input id="policyNumber" name="policyNumber" defaultValue={policyNumber ?? ""} placeholder="Ej. Auto5012" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="client">Cliente</Label>
+              <Input id="client" name="client" defaultValue={client ?? ""} placeholder="Nombre o razón social" />
+            </div>
+            <Button type="submit" size="sm">
+              Filtrar
+            </Button>
+            {hasFilters && (
+              <Button asChild type="button" size="sm" variant="ghost">
+                <Link href="/collections">Limpiar</Link>
+              </Button>
+            )}
+          </form>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <StatCard label="Total pendiente" value={formatCurrency(totalPending)} sub={`${payments.length} cuota(s)`} icon={Wallet} color="blue" />
@@ -63,7 +120,7 @@ export default async function CollectionsPage() {
               {payments.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                    No hay cobros pendientes.
+                    {hasFilters ? "Sin resultados para ese filtro." : "No hay cobros pendientes."}
                   </TableCell>
                 </TableRow>
               )}
