@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { prisma } from "@/lib/prisma";
+import { toneClass } from "@/lib/status-colors";
 import { NewInsurerDialog } from "./new-insurer-dialog";
 
 export default async function InsurersPage() {
@@ -47,14 +48,14 @@ export default async function InsurersPage() {
                   <TableCell className="space-x-1">
                     {insurer.products.length === 0 && <span className="text-muted-foreground">—</span>}
                     {insurer.products.map((p) => (
-                      <Badge key={p.id} variant="outline">
+                      <Badge key={p.id} className={toneClass("blue")}>
                         {p.name}
                       </Badge>
                     ))}
                   </TableCell>
                   <TableCell>{insurer._count.policies}</TableCell>
                   <TableCell>
-                    <Badge variant={insurer.active ? "secondary" : "outline"}>
+                    <Badge className={toneClass(insurer.active ? "emerald" : "slate")}>
                       {insurer.active ? "Activa" : "Inactiva"}
                     </Badge>
                   </TableCell>

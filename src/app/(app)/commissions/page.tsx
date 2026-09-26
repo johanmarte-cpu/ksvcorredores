@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatCurrency } from "@/lib/format";
+import { COMMISSION_STATUS_TONE, statusClass } from "@/lib/status-colors";
 
 export default async function CommissionsPage() {
   const commissions = await prisma.policyCommission.findMany({
@@ -103,7 +104,7 @@ export default async function CommissionsPage() {
                   <TableCell>{formatCurrency(c.expectedAmount.toString())}</TableCell>
                   <TableCell>{c.receivedAmount ? formatCurrency(c.receivedAmount.toString()) : "—"}</TableCell>
                   <TableCell>
-                    <Badge variant={c.status === "RECEIVED" ? "secondary" : "outline"}>{c.status}</Badge>
+                    <Badge className={statusClass(COMMISSION_STATUS_TONE, c.status)}>{c.status}</Badge>
                   </TableCell>
                 </TableRow>
               ))}

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName } from "@/lib/format";
+import { toneClass } from "@/lib/status-colors";
 import { NewClientDialog } from "./new-client-dialog";
 
 export default async function ClientsPage() {
@@ -48,7 +49,9 @@ export default async function ClientsPage() {
                     </Link>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{client.type === "PERSON" ? "Persona" : "Empresa"}</Badge>
+                    <Badge className={toneClass(client.type === "PERSON" ? "blue" : "violet")}>
+                      {client.type === "PERSON" ? "Persona" : "Empresa"}
+                    </Badge>
                   </TableCell>
                   <TableCell>{client.taxId}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">

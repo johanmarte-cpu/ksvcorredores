@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatCurrency, formatDate } from "@/lib/format";
 import { POLICY_STATUS_LABELS, PAYMENT_FREQUENCY_LABELS, CLAIM_STATUS_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/labels";
+import { POLICY_STATUS_TONE, CLAIM_STATUS_TONE, PAYMENT_STATUS_TONE, COMMISSION_STATUS_TONE, statusClass } from "@/lib/status-colors";
 import { NewPaymentDialog, MarkPaidButton, EditScheduleDialog } from "./payment-forms";
 import { NewCommissionDialog, ReceiveCommissionDialog } from "../../commissions/commission-forms";
 
@@ -39,7 +40,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
             · {policy.insurer.name} · {policy.product.name}
           </p>
         </div>
-        <Badge variant="outline">{POLICY_STATUS_LABELS[policy.status]}</Badge>
+        <Badge className={statusClass(POLICY_STATUS_TONE, policy.status)}>{POLICY_STATUS_LABELS[policy.status]}</Badge>
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
@@ -107,7 +108,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
                   <TableCell>{formatDate(payment.dueDate)}</TableCell>
                   <TableCell>{formatCurrency(payment.amount.toString())}</TableCell>
                   <TableCell>
-                    <Badge variant={payment.status === "PAID" ? "secondary" : "outline"}>
+                    <Badge className={statusClass(PAYMENT_STATUS_TONE, payment.status)}>
                       {PAYMENT_STATUS_LABELS[payment.status]}
                     </Badge>
                   </TableCell>
@@ -151,7 +152,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
                   <TableCell>{formatCurrency(c.expectedAmount.toString())}</TableCell>
                   <TableCell>{c.receivedAmount ? formatCurrency(c.receivedAmount.toString()) : "—"}</TableCell>
                   <TableCell>
-                    <Badge variant={c.status === "RECEIVED" ? "secondary" : "outline"}>{c.status}</Badge>
+                    <Badge className={statusClass(COMMISSION_STATUS_TONE, c.status)}>{c.status}</Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     {c.status !== "RECEIVED" && (
@@ -199,7 +200,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
                   </TableCell>
                   <TableCell>{claim.claimType}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{CLAIM_STATUS_LABELS[claim.status]}</Badge>
+                    <Badge className={statusClass(CLAIM_STATUS_TONE, claim.status)}>{CLAIM_STATUS_LABELS[claim.status]}</Badge>
                   </TableCell>
                   <TableCell>{formatDate(claim.incidentDate)}</TableCell>
                 </TableRow>

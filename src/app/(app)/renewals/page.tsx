@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatDate, daysUntil } from "@/lib/format";
+import { toneClass } from "@/lib/status-colors";
 import { GenerateTaskButton, RenewalStatusSelect } from "./renewal-actions-cell";
 
 export default async function RenewalsPage() {
@@ -65,9 +66,7 @@ export default async function RenewalsPage() {
                     <TableCell>{policy.insurer.name}</TableCell>
                     <TableCell>{formatDate(policy.endDate)}</TableCell>
                     <TableCell>
-                      <Badge variant={days <= 15 ? "destructive" : days <= 30 ? "default" : "secondary"}>
-                        {days} días
-                      </Badge>
+                      <Badge className={toneClass(days <= 7 ? "rose" : days <= 30 ? "amber" : "blue")}>{days} días</Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       {!hasOpenRenewal && <GenerateTaskButton policyId={policy.id} />}

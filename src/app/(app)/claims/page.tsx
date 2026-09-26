@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatDate } from "@/lib/format";
 import { CLAIM_STATUS_LABELS } from "@/lib/labels";
+import { CLAIM_STATUS_TONE, statusClass } from "@/lib/status-colors";
 
 export default async function ClaimsPage() {
   const claims = await prisma.claim.findMany({
@@ -55,7 +56,7 @@ export default async function ClaimsPage() {
                   <TableCell>{claim.claimType}</TableCell>
                   <TableCell>{formatDate(claim.incidentDate)}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{CLAIM_STATUS_LABELS[claim.status]}</Badge>
+                    <Badge className={statusClass(CLAIM_STATUS_TONE, claim.status)}>{CLAIM_STATUS_LABELS[claim.status]}</Badge>
                   </TableCell>
                 </TableRow>
               ))}

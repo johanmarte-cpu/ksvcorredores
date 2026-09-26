@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatCurrency, formatDate } from "@/lib/format";
 import { LOB_LABELS, QUOTE_STATUS_LABELS, QUOTE_REQUEST_STATUS_LABELS } from "@/lib/labels";
+import { QUOTE_STATUS_TONE, QUOTE_REQUEST_STATUS_TONE, statusClass } from "@/lib/status-colors";
 import { getSettings } from "@/lib/settings";
 import { SendRequestForm } from "./send-request-form";
 import { RegisterOptionDialog } from "./register-option-dialog";
@@ -45,7 +46,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
             {LOB_LABELS[quote.lineOfBusiness]} · Creada el {formatDate(quote.createdAt)}
           </p>
         </div>
-        <Badge variant="outline">{QUOTE_STATUS_LABELS[quote.status]}</Badge>
+        <Badge className={statusClass(QUOTE_STATUS_TONE, quote.status)}>{QUOTE_STATUS_LABELS[quote.status]}</Badge>
       </div>
 
       {quote.status !== "CONVERTED" && (
@@ -67,7 +68,9 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
           <Card key={request.id} className={request.option?.isSelected ? "border-primary" : undefined}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-base">{request.insurer.name}</CardTitle>
-              <Badge variant="outline">{QUOTE_REQUEST_STATUS_LABELS[request.status]}</Badge>
+              <Badge className={statusClass(QUOTE_REQUEST_STATUS_TONE, request.status)}>
+                {QUOTE_REQUEST_STATUS_LABELS[request.status]}
+              </Badge>
             </CardHeader>
             <CardContent className="space-y-3">
               {request.product && <p className="text-sm text-muted-foreground">{request.product.name}</p>}
@@ -83,7 +86,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
                   <div className="flex flex-wrap gap-2 pt-2">
                     {request.option.isSelected ? (
                       <>
-                        <Badge>Seleccionada</Badge>
+                        <Badge className="border-transparent bg-emerald-100 text-emerald-700">Seleccionada</Badge>
                         <ConvertDialog
                           quoteId={quote.id}
                           quoteRequestId={request.id}

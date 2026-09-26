@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { ROLE_LABELS } from "@/lib/labels";
+import { ROLE_TONE, toneClass, statusClass } from "@/lib/status-colors";
 import { NewUserDialog } from "./new-user-dialog";
 import { ToggleActiveButton } from "./toggle-active-switch";
 
@@ -39,10 +40,10 @@ export default async function UsersPage() {
                   <TableCell>{u.name}</TableCell>
                   <TableCell>{u.email}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{ROLE_LABELS[u.role]}</Badge>
+                    <Badge className={statusClass(ROLE_TONE, u.role)}>{ROLE_LABELS[u.role]}</Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={u.active ? "secondary" : "outline"}>{u.active ? "Activo" : "Inactivo"}</Badge>
+                    <Badge className={toneClass(u.active ? "emerald" : "slate")}>{u.active ? "Activo" : "Inactivo"}</Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <ToggleActiveButton userId={u.id} active={u.active} />

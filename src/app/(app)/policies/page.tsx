@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatCurrency, formatDate } from "@/lib/format";
 import { POLICY_STATUS_LABELS } from "@/lib/labels";
+import { POLICY_STATUS_TONE, statusClass } from "@/lib/status-colors";
 import { getSettings } from "@/lib/settings";
 import { NewPolicyDialog } from "./new-policy-dialog";
 
@@ -70,7 +71,7 @@ export default async function PoliciesPage() {
                   <TableCell className="font-medium">{formatCurrency(p.totalAmount.toString())}</TableCell>
                   <TableCell>{formatDate(p.endDate)}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{POLICY_STATUS_LABELS[p.status]}</Badge>
+                    <Badge className={statusClass(POLICY_STATUS_TONE, p.status)}>{POLICY_STATUS_LABELS[p.status]}</Badge>
                   </TableCell>
                 </TableRow>
               ))}

@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatDate } from "@/lib/format";
 import { LOB_LABELS, QUOTE_STATUS_LABELS } from "@/lib/labels";
+import { QUOTE_STATUS_TONE, statusClass } from "@/lib/status-colors";
 import { NewQuoteDialog } from "./new-quote-dialog";
 
 export default async function QuotesPage() {
@@ -53,7 +54,7 @@ export default async function QuotesPage() {
                   <TableCell>{LOB_LABELS[q.lineOfBusiness]}</TableCell>
                   <TableCell>{q._count.requests}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{QUOTE_STATUS_LABELS[q.status]}</Badge>
+                    <Badge className={statusClass(QUOTE_STATUS_TONE, q.status)}>{QUOTE_STATUS_LABELS[q.status]}</Badge>
                   </TableCell>
                   <TableCell>{formatDate(q.createdAt)}</TableCell>
                 </TableRow>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatDate } from "@/lib/format";
+import { POLICY_STATUS_TONE, QUOTE_STATUS_TONE, toneClass, statusClass } from "@/lib/status-colors";
 import { NoteForm } from "./note-form";
 import { UploadDocumentForm, DocumentList } from "./document-forms";
 import { EditClientDialog } from "./edit-client-dialog";
@@ -86,7 +87,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                     </TableCell>
                     <TableCell>{p.insurer.name}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{p.status}</Badge>
+                      <Badge className={statusClass(POLICY_STATUS_TONE, p.status)}>{p.status}</Badge>
                     </TableCell>
                     <TableCell>{formatDate(p.endDate)}</TableCell>
                   </TableRow>
@@ -125,7 +126,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                       </Link>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{q.status}</Badge>
+                      <Badge className={statusClass(QUOTE_STATUS_TONE, q.status)}>{q.status}</Badge>
                     </TableCell>
                     <TableCell>{formatDate(q.createdAt)}</TableCell>
                   </TableRow>
@@ -164,7 +165,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant={client.knowledgeForm ? "secondary" : "outline"}>
+            <Badge className={toneClass(client.knowledgeForm ? "emerald" : "amber")}>
               {client.knowledgeForm ? "Completado" : "Pendiente"}
             </Badge>
             <Button asChild size="sm" variant="outline">

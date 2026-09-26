@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { formatCurrency, formatDate, clientDisplayName } from "@/lib/format";
+import { toneClass } from "@/lib/status-colors";
 
 // Colores por categoría (identidad fija por tarjeta, nunca por rango de valor).
 const INSURER_DOT_COLORS = ["bg-blue-500", "bg-amber-500", "bg-violet-500", "bg-rose-500", "bg-emerald-500", "bg-cyan-500"];
@@ -74,7 +75,7 @@ export default async function DashboardPage() {
         <div className="mt-2 h-1 w-24 rounded-full bg-gradient-to-r from-[var(--brand-navy)] via-[var(--brand-blue)] to-[var(--brand-green)]" />
       </div>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
         <StatCard label="Pólizas activas" value={activePolicies} href="/policies" icon={ShieldCheck} color="blue" />
         <StatCard
           label="Por vencer (30d)"
@@ -141,15 +142,7 @@ export default async function DashboardPage() {
                         </TableCell>
                         <TableCell>{p.insurer.name}</TableCell>
                         <TableCell>
-                          <Badge
-                            className={
-                              urgent
-                                ? "border-transparent bg-rose-100 text-rose-700 hover:bg-rose-100"
-                                : "border-transparent bg-amber-100 text-amber-700 hover:bg-amber-100"
-                            }
-                          >
-                            {formatDate(p.endDate)}
-                          </Badge>
+                          <Badge className={toneClass(urgent ? "rose" : "amber")}>{formatDate(p.endDate)}</Badge>
                         </TableCell>
                       </TableRow>
                     );
