@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatDate } from "@/lib/format";
 import { NoteForm } from "./note-form";
 import { UploadDocumentForm, DocumentList } from "./document-forms";
+import { EditClientDialog } from "./edit-client-dialog";
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -28,11 +29,29 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{clientDisplayName(client)}</h1>
-        <p className="text-sm text-muted-foreground">
-          {client.taxId} · {client.email || "sin correo"} · {client.phone || "sin teléfono"}
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">{clientDisplayName(client)}</h1>
+          <p className="text-sm text-muted-foreground">
+            {client.taxId} · {client.email || "sin correo"} · {client.phone || "sin teléfono"}
+            {client.birthDate && ` · Cumpleaños: ${formatDate(client.birthDate)}`}
+          </p>
+        </div>
+        <EditClientDialog
+          client={{
+            id: client.id,
+            type: client.type,
+            firstName: client.firstName,
+            lastName: client.lastName,
+            companyName: client.companyName,
+            taxId: client.taxId,
+            email: client.email,
+            phone: client.phone,
+            address: client.address,
+            city: client.city,
+            birthDate: client.birthDate,
+          }}
+        />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

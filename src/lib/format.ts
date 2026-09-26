@@ -7,9 +7,13 @@ export function formatCurrency(amount: number | string) {
   }).format(value);
 }
 
+// Date-only values (policy dates, due dates, birthdays, etc.) are stored as UTC
+// midnight of the intended calendar day. Formatting must pin timeZone: "UTC" too,
+// or the displayed day shifts backward on any server/browser running behind UTC
+// (e.g. America/Santo_Domingo, UTC-4) — midnight UTC is still "yesterday" there.
 export function formatDate(date: Date | string) {
   const value = typeof date === "string" ? new Date(date) : date;
-  return new Intl.DateTimeFormat("es-DO", { dateStyle: "medium" }).format(value);
+  return new Intl.DateTimeFormat("es-DO", { dateStyle: "medium", timeZone: "UTC" }).format(value);
 }
 
 export function daysUntil(date: Date | string) {

@@ -26,6 +26,7 @@ const clientSchema = z.object({
   phone: z.string().optional(),
   address: z.string().optional(),
   city: z.string().optional(),
+  birthDate: z.string().optional(),
 });
 
 export async function createClient(_prevState: { error?: string } | undefined, formData: FormData) {
@@ -40,15 +41,18 @@ export async function createClient(_prevState: { error?: string } | undefined, f
     phone: formData.get("phone") || undefined,
     address: formData.get("address") || undefined,
     city: formData.get("city") || undefined,
+    birthDate: formData.get("birthDate") || undefined,
   });
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
   }
 
+  const { birthDate, ...rest } = parsed.data;
+
   try {
     await prisma.client.create({
-      data: { ...parsed.data, assignedToId: session?.user?.id },
+      data: { ...rest, birthDate: birthDate ? new Date(birthDate) : undefined, assignedToId: session?.user?.id },
     });
   } catch (e: unknown) {
     if (e instanceof Error && e.message.includes("Unique constraint")) {
@@ -58,6 +62,46 @@ export async function createClient(_prevState: { error?: string } | undefined, f
   }
 
   revalidatePath("/clients");
+  return { success: true };
+}
+
+export async function updateClient(_prevState: { error?: string } | undefined, formData: FormData) {
+  const clientId = formData.get("clientId");
+  if (typeof clientId !== "string" || !clientId) return { error: "Cliente inválido" };
+
+  const parsed = clientSchema.safeParse({
+    type: formData.get("type"),
+    firstName: formData.get("firstName") || undefined,
+    lastName: formData.get("lastName") || undefined,
+    companyName: formData.get("companyName") || undefined,
+    taxId: formData.get("taxId"),
+    email: formData.get("email") || undefined,
+    phone: formData.get("phone") || undefined,
+    address: formData.get("address") || undefined,
+    city: formData.get("city") || undefined,
+    birthDate: formData.get("birthDate") || undefined,
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
+  }
+
+  const { birthDate, ...rest } = parsed.data;
+
+  try {
+    await prisma.client.update({
+      where: { id: clientId },
+      data: { ...rest, birthDate: birthDate ? new Date(birthDate) : null },
+    });
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message.includes("Unique constraint")) {
+      return { error: "Ya existe un cliente con esa cédula/RNC" };
+    }
+    return { error: "No se pudo actualizar el cliente" };
+  }
+
+  revalidatePath("/clients");
+  revalidatePath(`/clients/${clientId}`);
   return { success: true };
 }
 

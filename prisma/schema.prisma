@@ -212,20 +212,22 @@ model User {
 // ─────────────────────────────────────────────────────────────
 
 model Client {
-  id           String     @id @default(cuid())
-  type         ClientType
-  firstName    String? // personas físicas
-  lastName     String?
-  companyName  String? // empresas
-  taxId        String     @unique // Cédula/RNC
-  email        String?
-  phone        String?
-  address      String?
-  city         String?
-  assignedToId String?
-  assignedTo   User?      @relation("ClientAssignedTo", fields: [assignedToId], references: [id])
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  id                    String     @id @default(cuid())
+  type                  ClientType
+  firstName             String? // personas físicas
+  lastName              String?
+  companyName           String? // empresas
+  taxId                 String     @unique // Cédula/RNC
+  email                 String?
+  phone                 String?
+  address               String?
+  city                  String?
+  birthDate             DateTime? // solo personas físicas — usado para el saludo de cumpleaños
+  lastBirthdayEmailYear Int?
+  assignedToId          String?
+  assignedTo            User?      @relation("ClientAssignedTo", fields: [assignedToId], references: [id])
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
 
   contacts      ClientContact[]
   documents     ClientDocument[]
@@ -513,6 +515,7 @@ model Policy {
   endDate              DateTime
   status               PolicyStatus     @default(ACTIVE)
   renewalType          RenewalType      @default(MANUAL)
+  renewalNoticeSentAt  DateTime?
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
 
@@ -540,15 +543,16 @@ model PolicyDocument {
 }
 
 model PolicyPayment {
-  id        String        @id @default(cuid())
-  policyId  String
-  policy    Policy        @relation(fields: [policyId], references: [id], onDelete: Cascade)
-  amount    Decimal       @db.Decimal(12, 2)
-  dueDate   DateTime
-  paidDate  DateTime?
-  status    PaymentStatus @default(PENDING)
-  method    String?
-  createdAt DateTime      @default(now())
+  id             String        @id @default(cuid())
+  policyId       String
+  policy         Policy        @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  amount         Decimal       @db.Decimal(12, 2)
+  dueDate        DateTime
+  paidDate       DateTime?
+  status         PaymentStatus @default(PENDING)
+  method         String?
+  reminderSentAt DateTime?
+  createdAt      DateTime      @default(now())
 
   @@map("policy_payments")
 }

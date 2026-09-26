@@ -28,7 +28,14 @@ export default async function KnowledgeFormPage({ params }: { params: Promise<{ 
       <KnowledgeForm
         key={client.knowledgeForm?.updatedAt.toISOString() ?? "new"}
         clientId={client.id}
-        data={client.knowledgeForm}
+        data={
+          client.knowledgeForm
+            ? {
+                ...client.knowledgeForm,
+                otherIncomeAmount: client.knowledgeForm.otherIncomeAmount?.toString() ?? null,
+              }
+            : null
+        }
       />
     </div>
   );
