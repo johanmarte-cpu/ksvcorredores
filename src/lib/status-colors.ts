@@ -73,6 +73,11 @@ export const COMMISSION_STATUS_TONE: Record<string, Tone> = {
   DISPUTED: "rose",
 };
 
+export const REFERRAL_PAYMENT_STATUS_TONE: Record<string, Tone> = {
+  PENDING: "amber",
+  PAID: "emerald",
+};
+
 export const RISK_LEVEL_TONE: Record<string, Tone> = {
   BAJO: "emerald",
   MEDIO: "amber",

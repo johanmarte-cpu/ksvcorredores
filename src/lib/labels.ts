@@ -144,6 +144,11 @@ export const DUE_DILIGENCE_TYPE_LABELS: Record<string, string> = {
   AMPLIADA: "Ampliada",
 };
 
+export const REFERRAL_PAYMENT_STATUS_LABELS: Record<string, string> = {
+  PENDING: "Pendiente",
+  PAID: "Pagado",
+};
+
 export const DOMAIN_STATUS_LABELS: Record<string, string> = {
   verified: "Verificado",
   pending: "Pendiente",

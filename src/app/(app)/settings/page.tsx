@@ -22,6 +22,7 @@ export default async function SettingsPage() {
       <SettingsForm
         itbisRate={Number(settings.itbisRate)}
         downPaymentRate={Number(settings.downPaymentRate)}
+        referralPercentage={Number(settings.referralPercentage)}
         paymentReminderDays={settings.paymentReminderDays}
         renewalNoticeDays={settings.renewalNoticeDays}
         companyName={settings.companyName}

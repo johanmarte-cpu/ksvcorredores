@@ -10,6 +10,7 @@ import { updateSettings } from "./actions";
 export function SettingsForm(props: {
   itbisRate: number;
   downPaymentRate: number;
+  referralPercentage: number;
   paymentReminderDays: number;
   renewalNoticeDays: number;
   companyName: string;
@@ -48,6 +49,19 @@ export function SettingsForm(props: {
               min="0"
               max="100"
               defaultValue={props.downPaymentRate}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="referralPercentage">Referidos (% de prima neta)</Label>
+            <Input
+              id="referralPercentage"
+              name="referralPercentage"
+              type="number"
+              step="0.01"
+              min="0"
+              max="100"
+              defaultValue={props.referralPercentage}
               required
             />
           </div>

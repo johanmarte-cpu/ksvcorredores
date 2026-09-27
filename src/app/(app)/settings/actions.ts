@@ -9,6 +9,7 @@ import { SETTINGS_ID } from "@/lib/settings";
 const settingsSchema = z.object({
   itbisRate: z.coerce.number().min(0).max(100),
   downPaymentRate: z.coerce.number().min(0).max(100),
+  referralPercentage: z.coerce.number().min(0).max(100),
   paymentReminderDays: z.coerce.number().int().min(0).max(90),
   renewalNoticeDays: z.coerce.number().int().min(0).max(180),
   companyName: z.string().min(1, "El nombre de la empresa es obligatorio"),
@@ -31,6 +32,7 @@ export async function updateSettings(_prevState: { error?: string; success?: boo
   const parsed = settingsSchema.safeParse({
     itbisRate: formData.get("itbisRate"),
     downPaymentRate: formData.get("downPaymentRate"),
+    referralPercentage: formData.get("referralPercentage"),
     paymentReminderDays: formData.get("paymentReminderDays"),
     renewalNoticeDays: formData.get("renewalNoticeDays"),
     companyName: formData.get("companyName"),
@@ -54,6 +56,7 @@ export async function updateSettings(_prevState: { error?: string; success?: boo
   const sharedData = {
     itbisRate: parsed.data.itbisRate,
     downPaymentRate: parsed.data.downPaymentRate,
+    referralPercentage: parsed.data.referralPercentage,
     paymentReminderDays: parsed.data.paymentReminderDays,
     renewalNoticeDays: parsed.data.renewalNoticeDays,
     companyName: parsed.data.companyName,

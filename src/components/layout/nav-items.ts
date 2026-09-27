@@ -11,6 +11,7 @@ import {
   BarChart3,
   Settings,
   Banknote,
+  Handshake,
 } from "lucide-react";
 
 import type { LucideIcon } from "lucide-react";
@@ -26,6 +27,7 @@ export const navItems: NavItem[] = [
   { href: "/collections", label: "Cobros", icon: Banknote },
   { href: "/claims", label: "Reclamaciones", icon: AlertTriangle },
   { href: "/commissions", label: "Comisiones", icon: Percent },
+  { href: "/referrals", label: "Referidos", icon: Handshake },
   { href: "/reports", label: "Reportes", icon: BarChart3 },
   { href: "/insurers", label: "Aseguradoras", icon: Building2 },
   { href: "/users", label: "Usuarios", icon: UserCog, adminOnly: true },

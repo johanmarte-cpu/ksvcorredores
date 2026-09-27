@@ -6,27 +6,52 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { prisma } from "@/lib/prisma";
+import { getSettings } from "@/lib/settings";
 import { clientDisplayName, formatCurrency, formatDate } from "@/lib/format";
-import { POLICY_STATUS_LABELS, PAYMENT_FREQUENCY_LABELS, CLAIM_STATUS_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/labels";
-import { POLICY_STATUS_TONE, CLAIM_STATUS_TONE, PAYMENT_STATUS_TONE, COMMISSION_STATUS_TONE, statusClass } from "@/lib/status-colors";
+import {
+  POLICY_STATUS_LABELS,
+  PAYMENT_FREQUENCY_LABELS,
+  CLAIM_STATUS_LABELS,
+  PAYMENT_STATUS_LABELS,
+  REFERRAL_PAYMENT_STATUS_LABELS,
+} from "@/lib/labels";
+import {
+  POLICY_STATUS_TONE,
+  CLAIM_STATUS_TONE,
+  PAYMENT_STATUS_TONE,
+  COMMISSION_STATUS_TONE,
+  REFERRAL_PAYMENT_STATUS_TONE,
+  statusClass,
+} from "@/lib/status-colors";
 import { NewPaymentDialog, MarkPaidButton, EditScheduleDialog } from "./payment-forms";
 import { NewCommissionDialog, ReceiveCommissionDialog } from "../../commissions/commission-forms";
+import { AssignReferralDialog, MarkReferralPaidButton, RemoveReferralButton } from "../../referrals/referral-forms";
 
 export default async function PolicyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const policy = await prisma.policy.findUnique({
-    where: { id },
-    include: {
-      client: true,
-      insurer: true,
-      product: true,
-      payments: { orderBy: { dueDate: "asc" } },
-      commissions: { orderBy: { period: "desc" } },
-      claims: { orderBy: { createdAt: "desc" } },
-    },
-  });
+  const [policy, settings] = await Promise.all([
+    prisma.policy.findUnique({
+      where: { id },
+      include: {
+        client: true,
+        insurer: true,
+        product: true,
+        payments: { orderBy: { dueDate: "asc" } },
+        commissions: { orderBy: { period: "desc" } },
+        claims: { orderBy: { createdAt: "desc" } },
+        referral: { include: { referrer: true } },
+      },
+    }),
+    getSettings(),
+  ]);
 
   if (!policy) notFound();
+
+  // Incluye el referido ya asignado aunque esté inactivo, para no perderlo del selector al editar.
+  const referrers = await prisma.referrer.findMany({
+    where: { OR: [{ active: true }, { id: policy.referral?.referrerId ?? "" }] },
+    orderBy: { name: "asc" },
+  });
 
   return (
     <div className="space-y-6">
@@ -163,6 +188,55 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
               ))}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-base">Referido</CardTitle>
+          {referrers.length > 0 && (
+            <AssignReferralDialog
+              policyId={policy.id}
+              premium={Number(policy.premium)}
+              defaultPercentage={Number(settings.referralPercentage)}
+              referrers={referrers}
+              current={
+                policy.referral ? { referrerId: policy.referral.referrerId, percentage: Number(policy.referral.percentage) } : undefined
+              }
+              trigger={
+                <Button size="sm" variant={policy.referral ? "outline" : "secondary"}>
+                  {policy.referral ? "Editar" : "Asignar referido"}
+                </Button>
+              }
+            />
+          )}
+        </CardHeader>
+        <CardContent>
+          {!policy.referral ? (
+            <p className="text-sm text-muted-foreground">
+              {referrers.length === 0
+                ? "No hay referidos registrados. Créalos en el menú Referidos."
+                : "Sin referido asignado a esta póliza."}
+            </p>
+          ) : (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="space-y-1 text-sm">
+                <p className="font-medium">{policy.referral.referrer.name}</p>
+                <p className="text-muted-foreground">
+                  {policy.referral.percentage.toString()}% de prima neta · {formatCurrency(policy.referral.amount.toString())}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge className={statusClass(REFERRAL_PAYMENT_STATUS_TONE, policy.referral.status)}>
+                  {REFERRAL_PAYMENT_STATUS_LABELS[policy.referral.status]}
+                </Badge>
+                {policy.referral.status === "PENDING" && (
+                  <MarkReferralPaidButton policyId={policy.id} referralId={policy.referral.id} />
+                )}
+                <RemoveReferralButton policyId={policy.id} referralId={policy.referral.id} />
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

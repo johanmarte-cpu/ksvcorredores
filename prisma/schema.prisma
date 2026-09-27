@@ -179,6 +179,11 @@ enum CommissionStatus {
   DISPUTED
 }
 
+enum ReferralPaymentStatus {
+  PENDING
+  PAID
+}
+
 enum TaskStatus {
   PENDING
   IN_PROGRESS
@@ -368,7 +373,7 @@ model ClientKnowledgeForm {
   // Requerido cuando riskLevel = ALTO o el cliente/relacionado es PEP.
   seniorManagementApproved     Boolean?
   seniorManagementApprovedById String?
-  seniorManagementApprovedBy   User?     @relation("KnowledgeFormApprover", fields: [seniorManagementApprovedById], references: [id])
+  seniorManagementApprovedBy   User?    @relation("KnowledgeFormApprover", fields: [seniorManagementApprovedById], references: [id])
   ongoingMonitoringNotes       String?
 
   nextReviewDate DateTime? // próxima actualización periódica, según nivel de riesgo
@@ -586,6 +591,7 @@ model Policy {
   renewals    PolicyRenewal[]    @relation("RenewalOfPolicy")
   renewedInto PolicyRenewal[]    @relation("RenewalNewPolicy")
   claims      Claim[]
+  referral    PolicyReferral?
 
   @@index([endDate])
   @@map("policies")
@@ -631,6 +637,39 @@ model PolicyCommission {
   createdAt      DateTime         @default(now())
 
   @@map("policy_commissions")
+}
+
+model Referrer {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String?
+  email     String?
+  taxId     String?
+  notes     String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  policyReferrals PolicyReferral[]
+
+  @@map("referrers")
+}
+
+// Comisión de referido pagada una sola vez por póliza (no recurrente como PolicyCommission),
+// calculada como % de la prima neta (policy.premium, antes de ITBIS).
+model PolicyReferral {
+  id         String                @id @default(cuid())
+  policyId   String                @unique
+  policy     Policy                @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  referrerId String
+  referrer   Referrer              @relation(fields: [referrerId], references: [id])
+  percentage Decimal               @db.Decimal(5, 2)
+  amount     Decimal               @db.Decimal(12, 2)
+  status     ReferralPaymentStatus @default(PENDING)
+  paidDate   DateTime?
+  createdAt  DateTime              @default(now())
+
+  @@map("policy_referrals")
 }
 
 model PolicyRenewal {
@@ -741,6 +780,7 @@ model SystemSettings {
 
   itbisRate           Decimal @default(16.00) @db.Decimal(5, 2) // % ITBIS aplicado a la prima
   downPaymentRate     Decimal @default(25.00) @db.Decimal(5, 2) // % inicial sobre la prima
+  referralPercentage  Decimal @default(10.00) @db.Decimal(5, 2) // % de prima neta pagado por defecto a un referido
   paymentReminderDays Int     @default(3) // días antes del vencimiento de una cuota
   renewalNoticeDays   Int     @default(30) // días antes del vencimiento de una póliza
 
@@ -759,8 +799,8 @@ model SystemSettings {
   notifyBirthdays        Boolean @default(true)
 
   // Dominio de envío verificado en Resend (para que los correos no lleguen como spam).
-  emailDomain     String?
-  resendDomainId  String?
+  emailDomain    String?
+  resendDomainId String?
 
   updatedAt   DateTime @updatedAt
   updatedById String?
