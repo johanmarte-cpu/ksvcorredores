@@ -8,6 +8,7 @@ import { POLICY_STATUS_LABELS } from "@/lib/labels";
 import { POLICY_STATUS_TONE, statusClass } from "@/lib/status-colors";
 import { getSettings } from "@/lib/settings";
 import { NewPolicyDialog } from "./new-policy-dialog";
+import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function PoliciesPage() {
   const [policies, clients, insurers, settings] = await Promise.all([
@@ -22,7 +23,7 @@ export default async function PoliciesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <FadeIn className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Pólizas</h1>
         <NewPolicyDialog
           clients={clients.map((c) => ({ id: c.id, name: clientDisplayName(c) }))}
@@ -30,8 +31,9 @@ export default async function PoliciesPage() {
           itbisRate={Number(settings.itbisRate)}
           downPaymentRate={Number(settings.downPaymentRate)}
         />
-      </div>
+      </FadeIn>
 
+      <FadeIn delay={0.1}>
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -79,6 +81,7 @@ export default async function PoliciesPage() {
           </Table>
         </CardContent>
       </Card>
+      </FadeIn>
     </div>
   );
 }

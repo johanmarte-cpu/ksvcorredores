@@ -26,6 +26,7 @@ import {
 import { NewPaymentDialog, MarkPaidButton, EditScheduleDialog } from "./payment-forms";
 import { NewCommissionDialog, ReceiveCommissionDialog } from "../../commissions/commission-forms";
 import { AssignReferralDialog, MarkReferralPaidButton, RemoveReferralButton } from "../../referrals/referral-forms";
+import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function PolicyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -55,7 +56,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
+      <FadeIn className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-semibold">{policy.policyNumber}</h1>
           <p className="text-sm text-muted-foreground">
@@ -66,23 +67,24 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
           </p>
         </div>
         <Badge className={statusClass(POLICY_STATUS_TONE, policy.status)}>{POLICY_STATUS_LABELS[policy.status]}</Badge>
-      </div>
+      </FadeIn>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+      <FadeIn delay={0.05} className="grid grid-cols-2 gap-4 md:grid-cols-3">
         <InfoCard label="Prima" value={formatCurrency(policy.premium.toString())} />
         <InfoCard
           label={`ITBIS (${((Number(policy.itbisAmount) / Number(policy.premium)) * 100).toFixed(0)}%)`}
           value={formatCurrency(policy.itbisAmount.toString())}
         />
         <InfoCard label="Total" value={formatCurrency(policy.totalAmount.toString())} emphasis />
-      </div>
+      </FadeIn>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+      <FadeIn delay={0.1} className="grid grid-cols-2 gap-4 md:grid-cols-3">
         <InfoCard label="Comisión" value={`${policy.commissionPercentage}% · ${formatCurrency(policy.commissionAmount.toString())}`} />
         <InfoCard label="Forma de pago" value={PAYMENT_FREQUENCY_LABELS[policy.paymentFrequency]} />
         <InfoCard label="Vigencia" value={`${formatDate(policy.startDate)} → ${formatDate(policy.endDate)}`} />
-      </div>
+      </FadeIn>
 
+      <FadeIn delay={0.15}>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
@@ -146,7 +148,9 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
           </Table>
         </CardContent>
       </Card>
+      </FadeIn>
 
+      <FadeIn delay={0.2}>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">Comisiones</CardTitle>
@@ -190,7 +194,9 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
           </Table>
         </CardContent>
       </Card>
+      </FadeIn>
 
+      <FadeIn delay={0.25}>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">Referido</CardTitle>
@@ -239,7 +245,9 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
           )}
         </CardContent>
       </Card>
+      </FadeIn>
 
+      <FadeIn delay={0.3}>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">Reclamaciones</CardTitle>
@@ -283,6 +291,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
           </Table>
         </CardContent>
       </Card>
+      </FadeIn>
     </div>
   );
 }

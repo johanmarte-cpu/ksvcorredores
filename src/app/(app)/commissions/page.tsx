@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatCurrency } from "@/lib/format";
 import { COMMISSION_STATUS_TONE, statusClass } from "@/lib/status-colors";
+import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function CommissionsPage() {
   const commissions = await prisma.policyCommission.findMany({
@@ -26,9 +27,11 @@ export default async function CommissionsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Comisiones</h1>
+      <FadeIn>
+        <h1 className="text-2xl font-semibold">Comisiones</h1>
+      </FadeIn>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+      <FadeIn delay={0.05} className="grid grid-cols-2 gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground">Total esperado</p>
@@ -47,8 +50,9 @@ export default async function CommissionsPage() {
             <p className="mt-1 text-xl font-semibold">{formatCurrency(totalExpected - totalReceived)}</p>
           </CardContent>
         </Card>
-      </div>
+      </FadeIn>
 
+      <FadeIn delay={0.1}>
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Por aseguradora</CardTitle>
@@ -65,7 +69,9 @@ export default async function CommissionsPage() {
           {byInsurer.size === 0 && <p className="text-sm text-muted-foreground">Sin datos aún.</p>}
         </CardContent>
       </Card>
+      </FadeIn>
 
+      <FadeIn delay={0.15}>
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Detalle por póliza</CardTitle>
@@ -112,6 +118,7 @@ export default async function CommissionsPage() {
           </Table>
         </CardContent>
       </Card>
+      </FadeIn>
     </div>
   );
 }

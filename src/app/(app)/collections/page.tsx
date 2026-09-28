@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatCurrency, formatDate, daysUntil } from "@/lib/format";
 import { toneClass } from "@/lib/status-colors";
 import { MarkPaidCell } from "./collections-actions-cell";
+import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function CollectionsPage({
   searchParams,
@@ -53,39 +54,41 @@ export default async function CollectionsPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <FadeIn className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Cobros</h1>
         <Button asChild size="sm" variant="outline">
           <Link href="/reports?tab=collections">
             <BarChart3 className="mr-1 h-4 w-4" /> Reporte de cobros
           </Link>
         </Button>
-      </div>
+      </FadeIn>
 
-      <Card>
-        <CardContent className="p-4">
-          <form className="flex flex-wrap items-end gap-4" action="/collections">
-            <div className="space-y-1">
-              <Label htmlFor="policyNumber">Número de póliza</Label>
-              <Input id="policyNumber" name="policyNumber" defaultValue={policyNumber ?? ""} placeholder="Ej. Auto5012" />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="client">Cliente</Label>
-              <Input id="client" name="client" defaultValue={client ?? ""} placeholder="Nombre o razón social" />
-            </div>
-            <Button type="submit" size="sm">
-              Filtrar
-            </Button>
-            {hasFilters && (
-              <Button asChild type="button" size="sm" variant="ghost">
-                <Link href="/collections">Limpiar</Link>
+      <FadeIn delay={0.05}>
+        <Card>
+          <CardContent className="p-4">
+            <form className="flex flex-wrap items-end gap-4" action="/collections">
+              <div className="space-y-1">
+                <Label htmlFor="policyNumber">Número de póliza</Label>
+                <Input id="policyNumber" name="policyNumber" defaultValue={policyNumber ?? ""} placeholder="Ej. Auto5012" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="client">Cliente</Label>
+                <Input id="client" name="client" defaultValue={client ?? ""} placeholder="Nombre o razón social" />
+              </div>
+              <Button type="submit" size="sm">
+                Filtrar
               </Button>
-            )}
-          </form>
-        </CardContent>
-      </Card>
+              {hasFilters && (
+                <Button asChild type="button" size="sm" variant="ghost">
+                  <Link href="/collections">Limpiar</Link>
+                </Button>
+              )}
+            </form>
+          </CardContent>
+        </Card>
+      </FadeIn>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <FadeIn delay={0.1} className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <StatCard label="Total pendiente" value={formatCurrency(totalPending)} sub={`${payments.length} cuota(s)`} icon={Wallet} color="blue" />
         <StatCard
           label="Vencido"
@@ -101,8 +104,9 @@ export default async function CollectionsPage({
           icon={Clock}
           color="amber"
         />
-      </div>
+      </FadeIn>
 
+      <FadeIn delay={0.15}>
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -157,6 +161,7 @@ export default async function CollectionsPage({
           </Table>
         </CardContent>
       </Card>
+      </FadeIn>
     </div>
   );
 }
