@@ -9,6 +9,7 @@ import { REFERRAL_PAYMENT_STATUS_TONE, statusClass, toneClass } from "@/lib/stat
 import { NewReferrerDialog } from "./new-referrer-dialog";
 import { ToggleReferrerActiveButton } from "./toggle-referrer-active";
 import { MarkReferralPaidButton } from "./referral-forms";
+import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function ReferralsPage() {
   const [referrers, referrals] = await Promise.all([
@@ -25,14 +26,17 @@ export default async function ReferralsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Referidos</h1>
+      <FadeIn>
+        <h1 className="text-2xl font-semibold">Referidos</h1>
+      </FadeIn>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+      <FadeIn delay={0.05} className="grid grid-cols-2 gap-4 md:grid-cols-3">
         <StatCard label="Referidos activos" value={activeReferrers} />
         <StatCard label="Pendiente de pago" value={formatCurrency(totalPending)} />
         <StatCard label="Pagado" value={formatCurrency(totalPaid)} />
-      </div>
+      </FadeIn>
 
+      <FadeIn delay={0.1}>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">Registro de referidos</CardTitle>
@@ -74,7 +78,9 @@ export default async function ReferralsPage() {
           </Table>
         </CardContent>
       </Card>
+      </FadeIn>
 
+      <FadeIn delay={0.15}>
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Pagos por póliza (% de prima neta)</CardTitle>
@@ -128,6 +134,7 @@ export default async function ReferralsPage() {
           </Table>
         </CardContent>
       </Card>
+      </FadeIn>
     </div>
   );
 }

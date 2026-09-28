@@ -7,6 +7,7 @@ import { clientDisplayName, formatDate } from "@/lib/format";
 import { LOB_LABELS, QUOTE_STATUS_LABELS } from "@/lib/labels";
 import { QUOTE_STATUS_TONE, statusClass } from "@/lib/status-colors";
 import { NewQuoteDialog } from "./new-quote-dialog";
+import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function QuotesPage() {
   const [quotes, clients] = await Promise.all([
@@ -19,11 +20,12 @@ export default async function QuotesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <FadeIn className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Cotizaciones</h1>
         <NewQuoteDialog clients={clients.map((c) => ({ id: c.id, name: clientDisplayName(c) }))} />
-      </div>
+      </FadeIn>
 
+      <FadeIn delay={0.1}>
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -63,6 +65,7 @@ export default async function QuotesPage() {
           </Table>
         </CardContent>
       </Card>
+      </FadeIn>
     </div>
   );
 }

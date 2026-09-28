@@ -12,6 +12,7 @@ import { RISK_LEVEL_LABELS } from "@/lib/labels";
 import { NoteForm } from "./note-form";
 import { UploadDocumentForm, DocumentList } from "./document-forms";
 import { EditClientDialog } from "./edit-client-dialog";
+import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -31,7 +32,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
+      <FadeIn className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-semibold">{clientDisplayName(client)}</h1>
           <p className="text-sm text-muted-foreground">
@@ -54,9 +55,9 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             birthDate: client.birthDate,
           }}
         />
-      </div>
+      </FadeIn>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <FadeIn delay={0.05} className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Pólizas</CardTitle>
@@ -136,9 +137,10 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             </Table>
           </CardContent>
         </Card>
-      </div>
+      </FadeIn>
 
       {client.type === "COMPANY" && (
+        <FadeIn delay={0.1}>
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Contactos empresariales</CardTitle>
@@ -154,8 +156,10 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             </ul>
           </CardContent>
         </Card>
+        </FadeIn>
       )}
 
+      <FadeIn delay={0.15}>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div className="flex items-center gap-2">
@@ -180,7 +184,9 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </div>
         </CardHeader>
       </Card>
+      </FadeIn>
 
+      <FadeIn delay={0.2}>
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Documentos del expediente</CardTitle>
@@ -190,7 +196,9 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           <DocumentList clientId={client.id} documents={client.documents} />
         </CardContent>
       </Card>
+      </FadeIn>
 
+      <FadeIn delay={0.25}>
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Notas</CardTitle>
@@ -209,6 +217,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </div>
         </CardContent>
       </Card>
+      </FadeIn>
     </div>
   );
 }

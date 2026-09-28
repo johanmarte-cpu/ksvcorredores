@@ -10,6 +10,7 @@ import { SendRequestForm } from "./send-request-form";
 import { RegisterOptionDialog } from "./register-option-dialog";
 import { SelectOptionButton } from "./select-option-button";
 import { ConvertDialog } from "./convert-dialog";
+import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function QuoteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -39,7 +40,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
+      <FadeIn className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-semibold">{clientDisplayName(quote.client)}</h1>
           <p className="text-sm text-muted-foreground">
@@ -47,9 +48,10 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
           </p>
         </div>
         <Badge className={statusClass(QUOTE_STATUS_TONE, quote.status)}>{QUOTE_STATUS_LABELS[quote.status]}</Badge>
-      </div>
+      </FadeIn>
 
       {quote.status !== "CONVERTED" && (
+        <FadeIn delay={0.05}>
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Enviar solicitud a aseguradora</CardTitle>
@@ -58,9 +60,10 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
             <SendRequestForm quoteId={quote.id} insurers={insurers} />
           </CardContent>
         </Card>
+        </FadeIn>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <FadeIn delay={0.1} className="grid gap-4 md:grid-cols-2">
         {quote.requests.length === 0 && (
           <p className="text-sm text-muted-foreground">Aún no se ha enviado esta cotización a ninguna aseguradora.</p>
         )}
@@ -106,7 +109,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
             </CardContent>
           </Card>
         ))}
-      </div>
+      </FadeIn>
     </div>
   );
 }

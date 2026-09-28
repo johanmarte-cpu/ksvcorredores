@@ -7,6 +7,7 @@ import { clientDisplayName } from "@/lib/format";
 import { toneClass, statusClass, RISK_LEVEL_TONE } from "@/lib/status-colors";
 import { RISK_LEVEL_LABELS } from "@/lib/labels";
 import { NewClientDialog } from "./new-client-dialog";
+import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function ClientsPage() {
   const clients = await prisma.client.findMany({
@@ -16,11 +17,12 @@ export default async function ClientsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <FadeIn className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Clientes</h1>
         <NewClientDialog />
-      </div>
+      </FadeIn>
 
+      <FadeIn delay={0.1}>
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -76,6 +78,7 @@ export default async function ClientsPage() {
           </Table>
         </CardContent>
       </Card>
+      </FadeIn>
     </div>
   );
 }
