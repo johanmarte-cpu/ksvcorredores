@@ -49,6 +49,7 @@ export function TrendCard({
           data={data}
           color={series === "premiums" ? "var(--brand-blue)" : "var(--brand-green)"}
           formatValue={(v) => formatCurrency(v)}
+          height={100}
         />
       </CardContent>
     </Card>

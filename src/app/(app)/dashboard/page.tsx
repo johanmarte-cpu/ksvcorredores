@@ -2,11 +2,12 @@ import { ShieldCheck, RefreshCw, FileText, AlertTriangle, Wallet, Percent } from
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { formatCurrency, clientDisplayName, lastMonthKeys, monthKeyOf } from "@/lib/format";
+import { formatCurrency, clientDisplayName, lastMonthKeys, monthKeyOf, daysUntil } from "@/lib/format";
 import { RenewalsPanel, type RenewalRow } from "@/components/dashboard/renewals-panel";
 import { InsurerBreakdown, type InsurerRow } from "@/components/dashboard/insurer-breakdown";
 import { TrendCard } from "@/components/dashboard/trend-card";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { CollectionsSummary } from "@/components/dashboard/collections-summary";
 import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function DashboardPage() {
@@ -29,6 +30,7 @@ export default async function DashboardPage() {
     byInsurer,
     payments6,
     commissions6,
+    pendingPayments,
   ] = await Promise.all([
     prisma.policy.count({ where: { status: "ACTIVE" } }),
     prisma.policy.count({ where: { status: "ACTIVE", endDate: { gte: now, lte: in30 } } }),
@@ -61,6 +63,10 @@ export default async function DashboardPage() {
     prisma.policyCommission.findMany({
       where: { period: { in: months6.map((m) => m.key) } },
       select: { period: true, receivedAmount: true },
+    }),
+    prisma.policyPayment.findMany({
+      where: { status: "PENDING" },
+      select: { amount: true, dueDate: true },
     }),
   ]);
 
@@ -100,6 +106,10 @@ export default async function DashboardPage() {
   }
   const premiumTrend = months6.map((m) => ({ label: m.label, value: paymentsByMonth.get(m.key) ?? 0 }));
   const commissionTrend = months6.map((m) => ({ label: m.label, value: commissionsByMonth.get(m.key) ?? 0 }));
+
+  const totalPending = pendingPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const overduePayments = pendingPayments.filter((p) => daysUntil(p.dueDate) < 0);
+  const totalOverdue = overduePayments.reduce((sum, p) => sum + Number(p.amount), 0);
 
   return (
     <div className="space-y-6">
@@ -163,28 +173,37 @@ export default async function DashboardPage() {
         />
       </FadeIn>
 
-      <FadeIn delay={0.2}>
-        <TrendCard premiums={premiumTrend} commissions={commissionTrend} />
+      <FadeIn delay={0.2} className="space-y-3">
+        <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Cartera</h2>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="text-base">Renovaciones próximas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RenewalsPanel renewals={renewalRows} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Cartera por aseguradora</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <InsurerBreakdown rows={insurerRows} />
+            </CardContent>
+          </Card>
+        </div>
       </FadeIn>
 
-      <FadeIn delay={0.3} className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base">Renovaciones próximas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <RenewalsPanel renewals={renewalRows} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Pólizas activas por aseguradora</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <InsurerBreakdown rows={insurerRows} />
-          </CardContent>
-        </Card>
+      <FadeIn delay={0.3} className="space-y-3">
+        <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Finanzas</h2>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <TrendCard premiums={premiumTrend} commissions={commissionTrend} />
+          </div>
+          <CollectionsSummary totalPending={totalPending} totalOverdue={totalOverdue} overdueCount={overduePayments.length} />
+        </div>
       </FadeIn>
     </div>
   );

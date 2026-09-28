@@ -1,21 +1,21 @@
-const CHART_HEIGHT = 160;
-
 export function MonthlyBarChart({
   data,
   color,
   formatValue = (value: number) => value.toLocaleString("es-DO"),
+  height = 160,
 }: {
   data: { label: string; value: number }[];
   color: string;
   formatValue?: (value: number) => string;
+  height?: number;
 }) {
   const max = Math.max(...data.map((d) => d.value), 1);
 
   return (
     <div>
-      <div className="flex items-end gap-2 border-b border-border" style={{ height: CHART_HEIGHT }}>
+      <div className="flex items-end gap-2 border-b border-border/60" style={{ height }}>
         {data.map((d, i) => {
-          const barHeight = d.value > 0 ? Math.max((d.value / max) * (CHART_HEIGHT - 24), 4) : 0;
+          const barHeight = d.value > 0 ? Math.max((d.value / max) * (height - 24), 4) : 0;
           const isLast = i === data.length - 1;
           return (
             <div
