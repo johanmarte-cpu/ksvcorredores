@@ -2,23 +2,26 @@
 
 import Image from "next/image";
 import { useActionState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AuroraBackground } from "@/components/effects/aurora-background";
 import { loginAction } from "./actions";
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(loginAction, undefined);
+  const reduceMotion = useReducedMotion();
 
   return (
-    <div
-      className="flex min-h-screen items-center justify-center px-4"
-      style={{
-        background: "linear-gradient(160deg, var(--brand-navy) 0%, #0a4a8f 55%, var(--brand-green) 150%)",
-      }}
-    >
-      <div className="w-full max-w-sm space-y-6">
+    <AuroraBackground className="flex items-center justify-center px-4 py-12">
+      <motion.div
+        initial={reduceMotion ? undefined : { opacity: 0, y: 24 }}
+        animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="w-full max-w-sm space-y-6"
+      >
         <div className="flex justify-center rounded-2xl bg-white px-8 py-6 shadow-lg">
           <Image src="/logo-ksv.jpg" alt="KSV Corredores de Seguros" width={280} height={94} className="h-16 w-auto" priority />
         </div>
@@ -47,7 +50,7 @@ export default function LoginPage() {
         </Card>
 
         <p className="text-center text-xs text-white/70">KSV Corredores de Seguros</p>
-      </div>
-    </div>
+      </motion.div>
+    </AuroraBackground>
   );
 }

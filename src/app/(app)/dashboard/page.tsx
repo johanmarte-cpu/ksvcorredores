@@ -1,13 +1,13 @@
-import Link from "next/link";
-import { ShieldCheck, RefreshCw, FileText, AlertTriangle, Wallet, Percent, type LucideIcon } from "lucide-react";
+import { ShieldCheck, RefreshCw, FileText, AlertTriangle, Wallet, Percent } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { formatCurrency, clientDisplayName, lastMonthKeys, monthKeyOf } from "@/lib/format";
 import { RenewalsPanel, type RenewalRow } from "@/components/dashboard/renewals-panel";
 import { InsurerBreakdown, type InsurerRow } from "@/components/dashboard/insurer-breakdown";
 import { TrendCard } from "@/components/dashboard/trend-card";
+import { StatCard } from "@/components/dashboard/stat-card";
+import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -103,19 +103,19 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <FadeIn>
         <h1 className="text-2xl font-semibold">
           {greeting}, {session?.user?.name?.split(" ")[0]}
         </h1>
         <div className="mt-2 h-1 w-24 rounded-full bg-gradient-to-r from-[var(--brand-navy)] via-[var(--brand-blue)] to-[var(--brand-green)]" />
-      </div>
+      </FadeIn>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+      <FadeIn delay={0.1} className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
         <StatCard
           label="Pólizas activas"
           value={activePolicies}
           href="/policies"
-          icon={ShieldCheck}
+          icon={<ShieldCheck className="h-4 w-4" />}
           color="blue"
           hint="Pólizas con estado ACTIVA en este momento."
         />
@@ -123,7 +123,7 @@ export default async function DashboardPage() {
           label="Por vencer (30d)"
           value={expiringPolicies}
           href="/renewals"
-          icon={RefreshCw}
+          icon={<RefreshCw className="h-4 w-4" />}
           color="amber"
           warn={expiringPolicies > 0}
           hint="Pólizas activas cuya fecha de vencimiento cae en los próximos 30 días."
@@ -132,7 +132,7 @@ export default async function DashboardPage() {
           label="Cotizaciones pendientes"
           value={pendingQuotes}
           href="/quotes"
-          icon={FileText}
+          icon={<FileText className="h-4 w-4" />}
           color="violet"
           hint="Cotizaciones en borrador, enviadas, en revisión o comparadas."
         />
@@ -140,7 +140,7 @@ export default async function DashboardPage() {
           label="Reclamaciones abiertas"
           value={openClaims}
           href="/claims"
-          icon={AlertTriangle}
+          icon={<AlertTriangle className="h-4 w-4" />}
           color="rose"
           warn={openClaims > 0}
           hint="Reclamaciones que aún no están cerradas, pagadas o rechazadas."
@@ -149,7 +149,7 @@ export default async function DashboardPage() {
           label="Primas cobradas (mes)"
           value={formatCurrency((premiumsThisMonth._sum.amount ?? 0).toString())}
           href="/commissions"
-          icon={Wallet}
+          icon={<Wallet className="h-4 w-4" />}
           color="emerald"
           hint="Suma de cuotas pagadas con fecha de pago dentro del mes en curso."
         />
@@ -157,15 +157,17 @@ export default async function DashboardPage() {
           label="Comisiones (mes)"
           value={formatCurrency((commissionsThisMonth._sum.expectedAmount ?? 0).toString())}
           href="/commissions"
-          icon={Percent}
+          icon={<Percent className="h-4 w-4" />}
           color="cyan"
           hint="Comisiones esperadas para el período actual (todas las pólizas)."
         />
-      </div>
+      </FadeIn>
 
-      <TrendCard premiums={premiumTrend} commissions={commissionTrend} />
+      <FadeIn delay={0.2}>
+        <TrendCard premiums={premiumTrend} commissions={commissionTrend} />
+      </FadeIn>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <FadeIn delay={0.3} className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-base">Renovaciones próximas</CardTitle>
@@ -183,60 +185,7 @@ export default async function DashboardPage() {
             <InsurerBreakdown rows={insurerRows} />
           </CardContent>
         </Card>
-      </div>
+      </FadeIn>
     </div>
-  );
-}
-
-const STAT_CARD_COLORS = {
-  blue: { bg: "bg-blue-100", text: "text-blue-600" },
-  amber: { bg: "bg-amber-100", text: "text-amber-600" },
-  violet: { bg: "bg-violet-100", text: "text-violet-600" },
-  rose: { bg: "bg-rose-100", text: "text-rose-600" },
-  emerald: { bg: "bg-emerald-100", text: "text-emerald-600" },
-  cyan: { bg: "bg-cyan-100", text: "text-cyan-600" },
-} as const;
-
-function StatCard({
-  label,
-  value,
-  href,
-  icon: Icon,
-  color,
-  warn,
-  hint,
-}: {
-  label: string;
-  value: string | number;
-  href: string;
-  icon: LucideIcon;
-  color: keyof typeof STAT_CARD_COLORS;
-  warn?: boolean;
-  hint?: string;
-}) {
-  const palette = STAT_CARD_COLORS[color];
-  const card = (
-    <Link href={href}>
-      <Card className="transition-colors hover:border-primary">
-        <CardContent className="flex items-start justify-between gap-2 p-4">
-          <div>
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <p className={`mt-1 text-xl font-semibold ${warn ? "text-destructive" : ""}`}>{value}</p>
-          </div>
-          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${palette.bg} ${palette.text}`}>
-            <Icon className="h-4 w-4" />
-          </span>
-        </CardContent>
-      </Card>
-    </Link>
-  );
-
-  if (!hint) return card;
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>{card}</TooltipTrigger>
-      <TooltipContent>{hint}</TooltipContent>
-    </Tooltip>
   );
 }
