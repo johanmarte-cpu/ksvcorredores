@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/format";
 import { NewProductForm, NewCommissionForm } from "./product-forms";
+import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function InsurerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -20,13 +21,14 @@ export default async function InsurerDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="space-y-6">
-      <div>
+      <FadeIn>
         <h1 className="text-2xl font-semibold">{insurer.name}</h1>
         <p className="text-sm text-muted-foreground">
           {insurer.email || "sin correo"} · {insurer.phone || "sin teléfono"}
         </p>
-      </div>
+      </FadeIn>
 
+      <FadeIn delay={0.05}>
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Productos</CardTitle>
@@ -58,7 +60,9 @@ export default async function InsurerDetailPage({ params }: { params: Promise<{ 
           </Table>
         </CardContent>
       </Card>
+      </FadeIn>
 
+      <FadeIn delay={0.1}>
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Tasas de comisión</CardTitle>
@@ -92,6 +96,7 @@ export default async function InsurerDetailPage({ params }: { params: Promise<{ 
           </Table>
         </CardContent>
       </Card>
+      </FadeIn>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { clientDisplayName, formatCurrency, lastMonthKeys, monthKeyOf } from "@/lib/format";
 import { MonthlyBarChart, StackedStatusBar } from "@/components/reports/monthly-bar-chart";
+import { FadeIn } from "@/components/effects/fade-in";
 
 const INACTIVE_STATUSES = ["EXPIRED", "CANCELLED", "RENEWED"] as const;
 
@@ -155,7 +156,9 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Reportes</h1>
+      <FadeIn>
+        <h1 className="text-2xl font-semibold">Reportes</h1>
+      </FadeIn>
 
       <Tabs defaultValue={defaultTab}>
         <TabsList>
@@ -167,12 +170,13 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
 
         {/* ── Cartera ── */}
         <TabsContent value="portfolio" className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+          <FadeIn className="grid grid-cols-2 gap-4 md:grid-cols-3">
             <StatCard label="Pólizas activas" value={statusCounts.ACTIVE} sub={formatCurrency(statusPremiums.ACTIVE)} />
             <StatCard label="Pendientes" value={statusCounts.PENDING} sub={formatCurrency(statusPremiums.PENDING)} />
             <StatCard label="Inactivas" value={statusCounts.INACTIVE} sub={formatCurrency(statusPremiums.INACTIVE)} />
-          </div>
+          </FadeIn>
 
+          <FadeIn delay={0.05}>
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Distribución de la cartera</CardTitle>
@@ -187,7 +191,9 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
               />
             </CardContent>
           </Card>
+          </FadeIn>
 
+          <FadeIn delay={0.1}>
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Por aseguradora</CardTitle>
@@ -224,11 +230,12 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
               </Table>
             </CardContent>
           </Card>
+          </FadeIn>
         </TabsContent>
 
         {/* ── Ingresos ── */}
         <TabsContent value="income" className="space-y-4">
-          <div className="grid gap-4 lg:grid-cols-2">
+          <FadeIn className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Primas cobradas por mes</CardTitle>
@@ -245,8 +252,9 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
                 <MonthlyBarChart data={commissionChartData} color="var(--brand-green)" formatValue={(v) => formatCurrency(v)} />
               </CardContent>
             </Card>
-          </div>
+          </FadeIn>
 
+          <FadeIn delay={0.05}>
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Detalle mensual</CardTitle>
@@ -274,11 +282,12 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
               </Table>
             </CardContent>
           </Card>
+          </FadeIn>
         </TabsContent>
 
         {/* ── Cobros ── */}
         <TabsContent value="collections" className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+          <FadeIn className="grid grid-cols-2 gap-4 md:grid-cols-3">
             <StatCard label="Total pendiente" value={formatCurrency(totalPending)} sub={`${pendingPayments.length} cuota(s)`} />
             <StatCard
               label="Total vencido"
@@ -286,8 +295,9 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
               sub={`${pendingPayments.length - aging.current.count} cuota(s)`}
             />
             <StatCard label="Cobrado a tiempo" value={onTimeRate === null ? "—" : `${onTimeRate.toFixed(0)}%`} sub="histórico" />
-          </div>
+          </FadeIn>
 
+          <FadeIn delay={0.05}>
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Antigüedad de saldos vencidos</CardTitle>
@@ -322,7 +332,9 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
               </Table>
             </CardContent>
           </Card>
+          </FadeIn>
 
+          <FadeIn delay={0.1}>
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Clientes con mayor saldo pendiente</CardTitle>
@@ -355,16 +367,18 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
               </Table>
             </CardContent>
           </Card>
+          </FadeIn>
         </TabsContent>
 
         {/* ── Clientes ── */}
         <TabsContent value="clients" className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+          <FadeIn className="grid grid-cols-2 gap-4 md:grid-cols-3">
             <StatCard label="Total de clientes" value={totalClients} />
             <StatCard label="Personas físicas" value={personCount} />
             <StatCard label="Empresas" value={companyCount} />
-          </div>
+          </FadeIn>
 
+          <FadeIn delay={0.05}>
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Nuevos clientes por mes</CardTitle>
@@ -373,8 +387,9 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
               <MonthlyBarChart data={newClientsChartData} color="var(--brand-navy)" />
             </CardContent>
           </Card>
+          </FadeIn>
 
-          <div className="grid gap-4 lg:grid-cols-2">
+          <FadeIn delay={0.1} className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Top 10 clientes por prima activa</CardTitle>
@@ -431,7 +446,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
                 </Table>
               </CardContent>
             </Card>
-          </div>
+          </FadeIn>
         </TabsContent>
       </Tabs>
     </div>

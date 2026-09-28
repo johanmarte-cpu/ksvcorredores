@@ -5,6 +5,7 @@ import { SettingsForm } from "./settings-form";
 import { DomainSection } from "./domain-section";
 import { getDomainStatus } from "./domain-actions";
 import { ClientImportSection } from "./client-import-section";
+import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -14,33 +15,39 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-4">
-      <div>
+      <FadeIn>
         <h1 className="text-2xl font-semibold">Configuración</h1>
         <p className="text-sm text-muted-foreground">Parámetros generales del sistema.</p>
-      </div>
+      </FadeIn>
 
-      <SettingsForm
-        itbisRate={Number(settings.itbisRate)}
-        downPaymentRate={Number(settings.downPaymentRate)}
-        referralPercentage={Number(settings.referralPercentage)}
-        paymentReminderDays={settings.paymentReminderDays}
-        renewalNoticeDays={settings.renewalNoticeDays}
-        companyName={settings.companyName}
-        companyTaxId={settings.companyTaxId ?? ""}
-        companyPhone={settings.companyPhone ?? ""}
-        companyEmail={settings.companyEmail ?? ""}
-        companyAddress={settings.companyAddress ?? ""}
-        emailFromName={settings.emailFromName ?? ""}
-        emailFromAddress={settings.emailFromAddress ?? ""}
-        hasResendApiKey={!!settings.resendApiKey || !!process.env.RESEND_API_KEY}
-        notifyPaymentReminders={settings.notifyPaymentReminders}
-        notifyRenewalNotices={settings.notifyRenewalNotices}
-        notifyBirthdays={settings.notifyBirthdays}
-      />
+      <FadeIn delay={0.05}>
+        <SettingsForm
+          itbisRate={Number(settings.itbisRate)}
+          downPaymentRate={Number(settings.downPaymentRate)}
+          referralPercentage={Number(settings.referralPercentage)}
+          paymentReminderDays={settings.paymentReminderDays}
+          renewalNoticeDays={settings.renewalNoticeDays}
+          companyName={settings.companyName}
+          companyTaxId={settings.companyTaxId ?? ""}
+          companyPhone={settings.companyPhone ?? ""}
+          companyEmail={settings.companyEmail ?? ""}
+          companyAddress={settings.companyAddress ?? ""}
+          emailFromName={settings.emailFromName ?? ""}
+          emailFromAddress={settings.emailFromAddress ?? ""}
+          hasResendApiKey={!!settings.resendApiKey || !!process.env.RESEND_API_KEY}
+          notifyPaymentReminders={settings.notifyPaymentReminders}
+          notifyRenewalNotices={settings.notifyRenewalNotices}
+          notifyBirthdays={settings.notifyBirthdays}
+        />
+      </FadeIn>
 
-      <DomainSection domain={domain} />
+      <FadeIn delay={0.1}>
+        <DomainSection domain={domain} />
+      </FadeIn>
 
-      <ClientImportSection />
+      <FadeIn delay={0.15}>
+        <ClientImportSection />
+      </FadeIn>
     </div>
   );
 }

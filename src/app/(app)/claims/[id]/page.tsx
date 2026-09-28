@@ -6,6 +6,7 @@ import { clientDisplayName, formatDate } from "@/lib/format";
 import { CLAIM_EVENT_TYPE_LABELS } from "@/lib/labels";
 import { StatusSelect } from "./status-select";
 import { EventForm } from "./event-form";
+import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function ClaimDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -21,7 +22,7 @@ export default async function ClaimDetailPage({ params }: { params: Promise<{ id
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
+      <FadeIn className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Caso {claim.caseNumber}</h1>
           <p className="text-sm text-muted-foreground">
@@ -32,9 +33,9 @@ export default async function ClaimDetailPage({ params }: { params: Promise<{ id
           </p>
         </div>
         <StatusSelect claimId={claim.id} status={claim.status} />
-      </div>
+      </FadeIn>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+      <FadeIn delay={0.05} className="grid grid-cols-2 gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground">Tipo de siniestro</p>
@@ -47,17 +48,20 @@ export default async function ClaimDetailPage({ params }: { params: Promise<{ id
             <p className="mt-1 text-sm font-semibold">{formatDate(claim.incidentDate)}</p>
           </CardContent>
         </Card>
-      </div>
+      </FadeIn>
 
       {claim.description && (
+        <FadeIn delay={0.1}>
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Descripción</CardTitle>
           </CardHeader>
           <CardContent className="text-sm">{claim.description}</CardContent>
         </Card>
+        </FadeIn>
       )}
 
+      <FadeIn delay={0.15}>
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Seguimiento</CardTitle>
@@ -76,6 +80,7 @@ export default async function ClaimDetailPage({ params }: { params: Promise<{ id
           </div>
         </CardContent>
       </Card>
+      </FadeIn>
     </div>
   );
 }

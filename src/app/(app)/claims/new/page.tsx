@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { clientDisplayName } from "@/lib/format";
 import { NewClaimForm } from "./new-claim-form";
+import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function NewClaimPage({
   searchParams,
@@ -15,11 +16,15 @@ export default async function NewClaimPage({
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Nueva reclamación</h1>
-      <NewClaimForm
-        policies={policies.map((p) => ({ id: p.id, policyNumber: p.policyNumber, clientName: clientDisplayName(p.client) }))}
-        defaultPolicyId={policyId}
-      />
+      <FadeIn>
+        <h1 className="text-2xl font-semibold">Nueva reclamación</h1>
+      </FadeIn>
+      <FadeIn delay={0.05}>
+        <NewClaimForm
+          policies={policies.map((p) => ({ id: p.id, policyNumber: p.policyNumber, clientName: clientDisplayName(p.client) }))}
+          defaultPolicyId={policyId}
+        />
+      </FadeIn>
     </div>
   );
 }

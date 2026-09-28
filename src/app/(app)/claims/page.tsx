@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatDate } from "@/lib/format";
 import { CLAIM_STATUS_LABELS } from "@/lib/labels";
 import { CLAIM_STATUS_TONE, statusClass } from "@/lib/status-colors";
+import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function ClaimsPage() {
   const claims = await prisma.claim.findMany({
@@ -16,13 +17,14 @@ export default async function ClaimsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <FadeIn className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Reclamaciones</h1>
         <Button asChild size="sm">
           <Link href="/claims/new">Nueva reclamación</Link>
         </Button>
-      </div>
+      </FadeIn>
 
+      <FadeIn delay={0.1}>
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -64,6 +66,7 @@ export default async function ClaimsPage() {
           </Table>
         </CardContent>
       </Card>
+      </FadeIn>
     </div>
   );
 }

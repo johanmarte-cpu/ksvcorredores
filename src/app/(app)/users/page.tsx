@@ -8,6 +8,7 @@ import { ROLE_LABELS } from "@/lib/labels";
 import { ROLE_TONE, toneClass, statusClass } from "@/lib/status-colors";
 import { NewUserDialog } from "./new-user-dialog";
 import { ToggleActiveButton } from "./toggle-active-switch";
+import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function UsersPage() {
   const session = await auth();
@@ -17,11 +18,12 @@ export default async function UsersPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <FadeIn className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Usuarios</h1>
         <NewUserDialog />
-      </div>
+      </FadeIn>
 
+      <FadeIn delay={0.1}>
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -54,6 +56,7 @@ export default async function UsersPage() {
           </Table>
         </CardContent>
       </Card>
+      </FadeIn>
     </div>
   );
 }

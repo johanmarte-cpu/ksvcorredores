@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatDate, daysUntil } from "@/lib/format";
 import { toneClass } from "@/lib/status-colors";
 import { GenerateTaskButton, RenewalStatusSelect } from "./renewal-actions-cell";
+import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function RenewalsPage() {
   const now = new Date();
@@ -26,8 +27,11 @@ export default async function RenewalsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Renovaciones</h1>
+      <FadeIn>
+        <h1 className="text-2xl font-semibold">Renovaciones</h1>
+      </FadeIn>
 
+      <FadeIn delay={0.05}>
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Pólizas próximas a vencer (60 días)</CardTitle>
@@ -78,7 +82,9 @@ export default async function RenewalsPage() {
           </Table>
         </CardContent>
       </Card>
+      </FadeIn>
 
+      <FadeIn delay={0.1}>
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Seguimiento de renovaciones</CardTitle>
@@ -119,6 +125,7 @@ export default async function RenewalsPage() {
           </Table>
         </CardContent>
       </Card>
+      </FadeIn>
     </div>
   );
 }

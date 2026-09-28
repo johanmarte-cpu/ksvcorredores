@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { prisma } from "@/lib/prisma";
 import { toneClass } from "@/lib/status-colors";
 import { NewInsurerDialog } from "./new-insurer-dialog";
+import { FadeIn } from "@/components/effects/fade-in";
 
 export default async function InsurersPage() {
   const insurers = await prisma.insurer.findMany({
@@ -14,11 +15,12 @@ export default async function InsurersPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <FadeIn className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Aseguradoras</h1>
         <NewInsurerDialog />
-      </div>
+      </FadeIn>
 
+      <FadeIn delay={0.1}>
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -65,6 +67,7 @@ export default async function InsurersPage() {
           </Table>
         </CardContent>
       </Card>
+      </FadeIn>
     </div>
   );
 }
