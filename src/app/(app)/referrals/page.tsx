@@ -10,19 +10,35 @@ import { NewReferrerDialog } from "./new-referrer-dialog";
 import { ToggleReferrerActiveButton } from "./toggle-referrer-active";
 import { MarkReferralPaidButton } from "./referral-forms";
 import { FadeIn } from "@/components/effects/fade-in";
+import { ListPagination } from "@/components/ui/list-pagination";
+import { parsePage, paginate, totalPages as computeTotalPages } from "@/lib/pagination";
 
-export default async function ReferralsPage() {
-  const [referrers, referrals] = await Promise.all([
-    prisma.referrer.findMany({ orderBy: { createdAt: "desc" } }),
+export default async function ReferralsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ refPage?: string; payPage?: string }>;
+}) {
+  const { refPage: refPageParam, payPage: payPageParam } = await searchParams;
+  const refPage = parsePage(refPageParam);
+  const payPage = parsePage(payPageParam);
+
+  const [referrers, referrersCount, activeReferrers, allReferrals, referrals, referralsCount] = await Promise.all([
+    prisma.referrer.findMany({ orderBy: { createdAt: "desc" }, ...paginate(refPage) }),
+    prisma.referrer.count(),
+    prisma.referrer.count({ where: { active: true } }),
+    prisma.policyReferral.findMany({ select: { status: true, amount: true } }),
     prisma.policyReferral.findMany({
       orderBy: { createdAt: "desc" },
       include: { referrer: true, policy: { include: { client: true } } },
+      ...paginate(payPage),
     }),
+    prisma.policyReferral.count(),
   ]);
+  const refPages = computeTotalPages(referrersCount);
+  const payPages = computeTotalPages(referralsCount);
 
-  const totalPending = referrals.filter((r) => r.status === "PENDING").reduce((sum, r) => sum + Number(r.amount), 0);
-  const totalPaid = referrals.filter((r) => r.status === "PAID").reduce((sum, r) => sum + Number(r.amount), 0);
-  const activeReferrers = referrers.filter((r) => r.active).length;
+  const totalPending = allReferrals.filter((r) => r.status === "PENDING").reduce((sum, r) => sum + Number(r.amount), 0);
+  const totalPaid = allReferrals.filter((r) => r.status === "PAID").reduce((sum, r) => sum + Number(r.amount), 0);
 
   return (
     <div className="space-y-6">
@@ -77,6 +93,13 @@ export default async function ReferralsPage() {
             </TableBody>
           </Table>
         </CardContent>
+        <ListPagination
+          page={refPage}
+          totalPages={refPages}
+          basePath="/referrals"
+          paramName="refPage"
+          searchParams={{ payPage: payPageParam }}
+        />
       </Card>
       </FadeIn>
 
@@ -133,6 +156,13 @@ export default async function ReferralsPage() {
             </TableBody>
           </Table>
         </CardContent>
+        <ListPagination
+          page={payPage}
+          totalPages={payPages}
+          basePath="/referrals"
+          paramName="payPage"
+          searchParams={{ refPage: refPageParam }}
+        />
       </Card>
       </FadeIn>
     </div>

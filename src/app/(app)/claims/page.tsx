@@ -8,12 +8,22 @@ import { clientDisplayName, formatDate } from "@/lib/format";
 import { CLAIM_STATUS_LABELS } from "@/lib/labels";
 import { CLAIM_STATUS_TONE, statusClass } from "@/lib/status-colors";
 import { FadeIn } from "@/components/effects/fade-in";
+import { ListPagination } from "@/components/ui/list-pagination";
+import { parsePage, paginate, totalPages as computeTotalPages } from "@/lib/pagination";
 
-export default async function ClaimsPage() {
-  const claims = await prisma.claim.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { policy: { include: { client: true } } },
-  });
+export default async function ClaimsPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const { page: pageParam } = await searchParams;
+  const page = parsePage(pageParam);
+
+  const [claims, count] = await Promise.all([
+    prisma.claim.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { policy: { include: { client: true } } },
+      ...paginate(page),
+    }),
+    prisma.claim.count(),
+  ]);
+  const pages = computeTotalPages(count);
 
   return (
     <div className="space-y-4">
@@ -65,6 +75,7 @@ export default async function ClaimsPage() {
             </TableBody>
           </Table>
         </CardContent>
+        <ListPagination page={page} totalPages={pages} basePath="/claims" searchParams={{}} />
       </Card>
       </FadeIn>
     </div>

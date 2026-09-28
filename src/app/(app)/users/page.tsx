@@ -9,12 +9,21 @@ import { ROLE_TONE, toneClass, statusClass } from "@/lib/status-colors";
 import { NewUserDialog } from "./new-user-dialog";
 import { ToggleActiveButton } from "./toggle-active-switch";
 import { FadeIn } from "@/components/effects/fade-in";
+import { ListPagination } from "@/components/ui/list-pagination";
+import { parsePage, paginate, totalPages as computeTotalPages } from "@/lib/pagination";
 
-export default async function UsersPage() {
+export default async function UsersPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") redirect("/dashboard");
 
-  const users = await prisma.user.findMany({ orderBy: { createdAt: "asc" } });
+  const { page: pageParam } = await searchParams;
+  const page = parsePage(pageParam);
+
+  const [users, count] = await Promise.all([
+    prisma.user.findMany({ orderBy: { createdAt: "asc" }, ...paginate(page) }),
+    prisma.user.count(),
+  ]);
+  const pages = computeTotalPages(count);
 
   return (
     <div className="space-y-4">
@@ -55,6 +64,7 @@ export default async function UsersPage() {
             </TableBody>
           </Table>
         </CardContent>
+        <ListPagination page={page} totalPages={pages} basePath="/users" searchParams={{}} />
       </Card>
       </FadeIn>
     </div>

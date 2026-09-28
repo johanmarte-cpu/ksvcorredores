@@ -6,12 +6,22 @@ import { prisma } from "@/lib/prisma";
 import { toneClass } from "@/lib/status-colors";
 import { NewInsurerDialog } from "./new-insurer-dialog";
 import { FadeIn } from "@/components/effects/fade-in";
+import { ListPagination } from "@/components/ui/list-pagination";
+import { parsePage, paginate, totalPages as computeTotalPages } from "@/lib/pagination";
 
-export default async function InsurersPage() {
-  const insurers = await prisma.insurer.findMany({
-    orderBy: { name: "asc" },
-    include: { products: true, _count: { select: { policies: true } } },
-  });
+export default async function InsurersPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const { page: pageParam } = await searchParams;
+  const page = parsePage(pageParam);
+
+  const [insurers, count] = await Promise.all([
+    prisma.insurer.findMany({
+      orderBy: { name: "asc" },
+      include: { products: true, _count: { select: { policies: true } } },
+      ...paginate(page),
+    }),
+    prisma.insurer.count(),
+  ]);
+  const pages = computeTotalPages(count);
 
   return (
     <div className="space-y-4">
@@ -66,6 +76,7 @@ export default async function InsurersPage() {
             </TableBody>
           </Table>
         </CardContent>
+        <ListPagination page={page} totalPages={pages} basePath="/insurers" searchParams={{}} />
       </Card>
       </FadeIn>
     </div>

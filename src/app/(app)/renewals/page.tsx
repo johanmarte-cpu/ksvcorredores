@@ -7,23 +7,39 @@ import { clientDisplayName, formatDate, daysUntil } from "@/lib/format";
 import { toneClass } from "@/lib/status-colors";
 import { GenerateTaskButton, RenewalStatusSelect } from "./renewal-actions-cell";
 import { FadeIn } from "@/components/effects/fade-in";
+import { ListPagination } from "@/components/ui/list-pagination";
+import { parsePage, paginate, totalPages as computeTotalPages } from "@/lib/pagination";
 
-export default async function RenewalsPage() {
+export default async function RenewalsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ expPage?: string; renPage?: string }>;
+}) {
+  const { expPage: expPageParam, renPage: renPageParam } = await searchParams;
+  const expPage = parsePage(expPageParam);
+  const renPage = parsePage(renPageParam);
+
   const now = new Date();
   const in60 = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
 
-  const [expiring, renewals] = await Promise.all([
+  const [expiring, expiringCount, renewals, renewalsCount] = await Promise.all([
     prisma.policy.findMany({
       where: { status: "ACTIVE", endDate: { gte: now, lte: in60 } },
       orderBy: { endDate: "asc" },
       include: { client: true, insurer: true, renewals: true },
+      ...paginate(expPage),
     }),
+    prisma.policy.count({ where: { status: "ACTIVE", endDate: { gte: now, lte: in60 } } }),
     prisma.policyRenewal.findMany({
       where: { status: { notIn: ["RENEWED", "LAPSED", "DECLINED"] } },
       orderBy: { dueDate: "asc" },
       include: { policy: { include: { client: true, insurer: true } } },
+      ...paginate(renPage),
     }),
+    prisma.policyRenewal.count({ where: { status: { notIn: ["RENEWED", "LAPSED", "DECLINED"] } } }),
   ]);
+  const expPages = computeTotalPages(expiringCount);
+  const renPages = computeTotalPages(renewalsCount);
 
   return (
     <div className="space-y-6">
@@ -81,6 +97,13 @@ export default async function RenewalsPage() {
             </TableBody>
           </Table>
         </CardContent>
+        <ListPagination
+          page={expPage}
+          totalPages={expPages}
+          basePath="/renewals"
+          paramName="expPage"
+          searchParams={{ renPage: renPageParam }}
+        />
       </Card>
       </FadeIn>
 
@@ -124,6 +147,13 @@ export default async function RenewalsPage() {
             </TableBody>
           </Table>
         </CardContent>
+        <ListPagination
+          page={renPage}
+          totalPages={renPages}
+          basePath="/renewals"
+          paramName="renPage"
+          searchParams={{ expPage: expPageParam }}
+        />
       </Card>
       </FadeIn>
     </div>

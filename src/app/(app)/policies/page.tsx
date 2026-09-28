@@ -9,17 +9,25 @@ import { POLICY_STATUS_TONE, statusClass } from "@/lib/status-colors";
 import { getSettings } from "@/lib/settings";
 import { NewPolicyDialog } from "./new-policy-dialog";
 import { FadeIn } from "@/components/effects/fade-in";
+import { ListPagination } from "@/components/ui/list-pagination";
+import { parsePage, paginate, totalPages as computeTotalPages } from "@/lib/pagination";
 
-export default async function PoliciesPage() {
-  const [policies, clients, insurers, settings] = await Promise.all([
+export default async function PoliciesPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const { page: pageParam } = await searchParams;
+  const page = parsePage(pageParam);
+
+  const [policies, count, clients, insurers, settings] = await Promise.all([
     prisma.policy.findMany({
       orderBy: { createdAt: "desc" },
       include: { client: true, insurer: true, product: true },
+      ...paginate(page),
     }),
+    prisma.policy.count(),
     prisma.client.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.insurer.findMany({ where: { active: true }, include: { products: true }, orderBy: { name: "asc" } }),
     getSettings(),
   ]);
+  const pages = computeTotalPages(count);
 
   return (
     <div className="space-y-4">
@@ -80,6 +88,7 @@ export default async function PoliciesPage() {
             </TableBody>
           </Table>
         </CardContent>
+        <ListPagination page={page} totalPages={pages} basePath="/policies" searchParams={{}} />
       </Card>
       </FadeIn>
     </div>

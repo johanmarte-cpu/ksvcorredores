@@ -8,12 +8,22 @@ import { toneClass, statusClass, RISK_LEVEL_TONE } from "@/lib/status-colors";
 import { RISK_LEVEL_LABELS } from "@/lib/labels";
 import { NewClientDialog } from "./new-client-dialog";
 import { FadeIn } from "@/components/effects/fade-in";
+import { ListPagination } from "@/components/ui/list-pagination";
+import { parsePage, paginate, totalPages as computeTotalPages } from "@/lib/pagination";
 
-export default async function ClientsPage() {
-  const clients = await prisma.client.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { _count: { select: { policies: true, quotes: true } }, knowledgeForm: { select: { riskLevel: true } } },
-  });
+export default async function ClientsPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const { page: pageParam } = await searchParams;
+  const page = parsePage(pageParam);
+
+  const [clients, count] = await Promise.all([
+    prisma.client.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { _count: { select: { policies: true, quotes: true } }, knowledgeForm: { select: { riskLevel: true } } },
+      ...paginate(page),
+    }),
+    prisma.client.count(),
+  ]);
+  const pages = computeTotalPages(count);
 
   return (
     <div className="space-y-4">
@@ -77,6 +87,7 @@ export default async function ClientsPage() {
             </TableBody>
           </Table>
         </CardContent>
+        <ListPagination page={page} totalPages={pages} basePath="/clients" searchParams={{}} />
       </Card>
       </FadeIn>
     </div>

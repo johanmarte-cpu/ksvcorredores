@@ -8,15 +8,23 @@ import { LOB_LABELS, QUOTE_STATUS_LABELS } from "@/lib/labels";
 import { QUOTE_STATUS_TONE, statusClass } from "@/lib/status-colors";
 import { NewQuoteDialog } from "./new-quote-dialog";
 import { FadeIn } from "@/components/effects/fade-in";
+import { ListPagination } from "@/components/ui/list-pagination";
+import { parsePage, paginate, totalPages as computeTotalPages } from "@/lib/pagination";
 
-export default async function QuotesPage() {
-  const [quotes, clients] = await Promise.all([
+export default async function QuotesPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const { page: pageParam } = await searchParams;
+  const page = parsePage(pageParam);
+
+  const [quotes, count, clients] = await Promise.all([
     prisma.quote.findMany({
       orderBy: { createdAt: "desc" },
       include: { client: true, _count: { select: { requests: true } } },
+      ...paginate(page),
     }),
+    prisma.quote.count(),
     prisma.client.findMany({ orderBy: { createdAt: "desc" } }),
   ]);
+  const pages = computeTotalPages(count);
 
   return (
     <div className="space-y-4">
@@ -64,6 +72,7 @@ export default async function QuotesPage() {
             </TableBody>
           </Table>
         </CardContent>
+        <ListPagination page={page} totalPages={pages} basePath="/quotes" searchParams={{}} />
       </Card>
       </FadeIn>
     </div>

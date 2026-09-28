@@ -6,18 +6,35 @@ import { prisma } from "@/lib/prisma";
 import { clientDisplayName, formatCurrency } from "@/lib/format";
 import { COMMISSION_STATUS_TONE, statusClass } from "@/lib/status-colors";
 import { FadeIn } from "@/components/effects/fade-in";
+import { ListPagination } from "@/components/ui/list-pagination";
+import { parsePage, paginate, totalPages as computeTotalPages } from "@/lib/pagination";
 
-export default async function CommissionsPage() {
-  const commissions = await prisma.policyCommission.findMany({
-    orderBy: [{ period: "desc" }],
-    include: { policy: { include: { client: true, insurer: true } } },
-  });
+export default async function CommissionsPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  const { page: pageParam } = await searchParams;
+  const page = parsePage(pageParam);
 
-  const totalExpected = commissions.reduce((sum, c) => sum + Number(c.expectedAmount), 0);
-  const totalReceived = commissions.reduce((sum, c) => sum + Number(c.receivedAmount ?? 0), 0);
+  const [allCommissions, commissions, count] = await Promise.all([
+    prisma.policyCommission.findMany({
+      select: {
+        expectedAmount: true,
+        receivedAmount: true,
+        policy: { select: { insurer: { select: { id: true, name: true } } } },
+      },
+    }),
+    prisma.policyCommission.findMany({
+      orderBy: [{ period: "desc" }],
+      include: { policy: { include: { client: true, insurer: true } } },
+      ...paginate(page),
+    }),
+    prisma.policyCommission.count(),
+  ]);
+  const pages = computeTotalPages(count);
+
+  const totalExpected = allCommissions.reduce((sum, c) => sum + Number(c.expectedAmount), 0);
+  const totalReceived = allCommissions.reduce((sum, c) => sum + Number(c.receivedAmount ?? 0), 0);
 
   const byInsurer = new Map<string, { name: string; expected: number; received: number }>();
-  for (const c of commissions) {
+  for (const c of allCommissions) {
     const key = c.policy.insurer.id;
     const entry = byInsurer.get(key) ?? { name: c.policy.insurer.name, expected: 0, received: 0 };
     entry.expected += Number(c.expectedAmount);
@@ -117,6 +134,7 @@ export default async function CommissionsPage() {
             </TableBody>
           </Table>
         </CardContent>
+        <ListPagination page={page} totalPages={pages} basePath="/commissions" searchParams={{}} />
       </Card>
       </FadeIn>
     </div>

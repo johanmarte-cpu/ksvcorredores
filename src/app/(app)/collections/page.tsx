@@ -11,39 +11,50 @@ import { clientDisplayName, formatCurrency, formatDate, daysUntil } from "@/lib/
 import { toneClass } from "@/lib/status-colors";
 import { MarkPaidCell } from "./collections-actions-cell";
 import { FadeIn } from "@/components/effects/fade-in";
+import { ListPagination } from "@/components/ui/list-pagination";
+import { parsePage, paginate, totalPages as computeTotalPages } from "@/lib/pagination";
 
 export default async function CollectionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ policyNumber?: string; client?: string }>;
+  searchParams: Promise<{ policyNumber?: string; client?: string; page?: string }>;
 }) {
-  const { policyNumber, client } = await searchParams;
+  const { policyNumber, client, page: pageParam } = await searchParams;
+  const page = parsePage(pageParam);
 
-  const payments = await prisma.policyPayment.findMany({
-    where: {
-      status: "PENDING",
-      policy: {
-        ...(policyNumber ? { policyNumber: { contains: policyNumber, mode: "insensitive" } } : {}),
-        ...(client
-          ? {
-              client: {
-                OR: [
-                  { firstName: { contains: client, mode: "insensitive" } },
-                  { lastName: { contains: client, mode: "insensitive" } },
-                  { companyName: { contains: client, mode: "insensitive" } },
-                ],
-              },
-            }
-          : {}),
-      },
+  const where = {
+    status: "PENDING" as const,
+    policy: {
+      ...(policyNumber ? { policyNumber: { contains: policyNumber, mode: "insensitive" as const } } : {}),
+      ...(client
+        ? {
+            client: {
+              OR: [
+                { firstName: { contains: client, mode: "insensitive" as const } },
+                { lastName: { contains: client, mode: "insensitive" as const } },
+                { companyName: { contains: client, mode: "insensitive" as const } },
+              ],
+            },
+          }
+        : {}),
     },
-    orderBy: { dueDate: "asc" },
-    include: { policy: { include: { client: true, insurer: true } } },
-  });
+  };
 
-  const totalPending = payments.reduce((sum, p) => sum + Number(p.amount), 0);
-  const overdue = payments.filter((p) => daysUntil(p.dueDate) < 0);
-  const dueSoon = payments.filter((p) => {
+  const [allMatching, payments, count] = await Promise.all([
+    prisma.policyPayment.findMany({ where, select: { amount: true, dueDate: true } }),
+    prisma.policyPayment.findMany({
+      where,
+      orderBy: { dueDate: "asc" },
+      include: { policy: { include: { client: true, insurer: true } } },
+      ...paginate(page),
+    }),
+    prisma.policyPayment.count({ where }),
+  ]);
+  const pages = computeTotalPages(count);
+
+  const totalPending = allMatching.reduce((sum, p) => sum + Number(p.amount), 0);
+  const overdue = allMatching.filter((p) => daysUntil(p.dueDate) < 0);
+  const dueSoon = allMatching.filter((p) => {
     const d = daysUntil(p.dueDate);
     return d >= 0 && d <= 7;
   });
@@ -89,7 +100,7 @@ export default async function CollectionsPage({
       </FadeIn>
 
       <FadeIn delay={0.1} className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <StatCard label="Total pendiente" value={formatCurrency(totalPending)} sub={`${payments.length} cuota(s)`} icon={Wallet} color="blue" />
+        <StatCard label="Total pendiente" value={formatCurrency(totalPending)} sub={`${allMatching.length} cuota(s)`} icon={Wallet} color="blue" />
         <StatCard
           label="Vencido"
           value={formatCurrency(totalOverdue)}
@@ -160,6 +171,12 @@ export default async function CollectionsPage({
             </TableBody>
           </Table>
         </CardContent>
+        <ListPagination
+          page={page}
+          totalPages={pages}
+          basePath="/collections"
+          searchParams={{ policyNumber, client }}
+        />
       </Card>
       </FadeIn>
     </div>
