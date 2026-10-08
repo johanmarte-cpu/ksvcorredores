@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useActionState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,16 +11,11 @@ import { loginAction } from "./actions";
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(loginAction, undefined);
-  const reduceMotion = useReducedMotion();
 
   return (
     <AuroraBackground className="flex items-center justify-center px-4 py-12">
-      <motion.div
-        initial={reduceMotion ? undefined : { opacity: 0, y: 24 }}
-        animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="w-full max-w-sm space-y-6"
-      >
+      {/* CSS animation (not framer-motion) so the form is visible even before/without JS. */}
+      <div className="w-full max-w-sm animate-in space-y-6 fade-in slide-in-from-bottom-6 fill-mode-backwards duration-700 ease-out motion-reduce:animate-none">
         <div className="flex justify-center rounded-2xl bg-white px-8 py-6 shadow-lg">
           <Image src="/logo-ksv.jpg" alt="KSV Corredores de Seguros" width={280} height={94} className="h-16 w-auto" priority />
         </div>
@@ -50,7 +44,7 @@ export default function LoginPage() {
         </Card>
 
         <p className="text-center text-xs text-white/70">KSV Corredores de Seguros</p>
-      </motion.div>
+      </div>
     </AuroraBackground>
   );
 }

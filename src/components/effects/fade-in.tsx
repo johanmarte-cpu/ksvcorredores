@@ -1,21 +1,21 @@
-"use client";
-
 import type { ReactNode } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
-/** Fades and slides content up into place once it enters the viewport; a no-op under prefers-reduced-motion. */
+/**
+ * Fades and slides content up into place on mount. Pure CSS (tw-animate-css) so content is
+ * visible even if JavaScript is slow or fails to run (e.g. older mobile browsers) — a
+ * JS-driven `initial={{ opacity: 0 }}` would leave the page blank in that case.
+ */
 export function FadeIn({ children, delay = 0, className }: { children: ReactNode; delay?: number; className?: string }) {
-  const reduceMotion = useReducedMotion();
-
   return (
-    <motion.div
-      className={className}
-      initial={reduceMotion ? undefined : { opacity: 0, y: 16 }}
-      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.45, delay, ease: "easeOut" }}
+    <div
+      className={cn(
+        "animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards duration-500 ease-out motion-reduce:animate-none",
+        className,
+      )}
+      style={delay ? { animationDelay: `${delay}s` } : undefined}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
