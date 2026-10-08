@@ -25,7 +25,7 @@ export default async function InsurersPage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="space-y-4">
-      <FadeIn className="flex items-center justify-between">
+      <FadeIn className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Aseguradoras</h1>
         <NewInsurerDialog />
       </FadeIn>

@@ -37,20 +37,22 @@ export function ListPagination({
         <Link
           href={hrefFor(Math.max(1, page - 1))}
           aria-disabled={page <= 1}
+          aria-label="Página anterior"
           className={`flex items-center gap-1 rounded-md border px-2.5 py-1.5 text-sm transition-colors ${
             page <= 1 ? "pointer-events-none opacity-40" : "hover:bg-muted"
           }`}
         >
-          <ChevronLeft className="h-4 w-4" /> Anterior
+          <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline">Anterior</span>
         </Link>
         <Link
           href={hrefFor(Math.min(totalPages, page + 1))}
           aria-disabled={page >= totalPages}
+          aria-label="Página siguiente"
           className={`flex items-center gap-1 rounded-md border px-2.5 py-1.5 text-sm transition-colors ${
             page >= totalPages ? "pointer-events-none opacity-40" : "hover:bg-muted"
           }`}
         >
-          Siguiente <ChevronRight className="h-4 w-4" />
+          <span className="hidden sm:inline">Siguiente</span> <ChevronRight className="h-4 w-4" />
         </Link>
       </div>
     </CardFooter>

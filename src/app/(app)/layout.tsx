@@ -15,7 +15,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
         <SidebarNav isAdmin={isAdmin} />
       </aside>
-      <div className="flex min-h-screen flex-1 flex-col">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <Topbar />
         <main className="flex-1 bg-background p-4 md:p-6">{children}</main>
       </div>

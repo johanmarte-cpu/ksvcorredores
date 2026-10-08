@@ -54,7 +54,7 @@ export default async function ReferralsPage({
 
       <FadeIn delay={0.1}>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
           <CardTitle className="text-base">Registro de referidos</CardTitle>
           <NewReferrerDialog />
         </CardHeader>

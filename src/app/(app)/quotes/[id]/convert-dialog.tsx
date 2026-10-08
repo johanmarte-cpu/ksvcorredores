@@ -61,7 +61,7 @@ export function ConvertDialog({
             <Label htmlFor="policyNumber">Número de póliza</Label>
             <Input id="policyNumber" name="policyNumber" required />
           </div>
-          <div className="grid grid-cols-3 gap-3 rounded-md border bg-muted/40 p-3 text-sm">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 rounded-md border bg-muted/40 p-3 text-sm">
             <div>
               <p className="text-xs text-muted-foreground">Prima</p>
               <p className="font-medium">{formatCurrency(premium)}</p>
@@ -97,7 +97,7 @@ export function ConvertDialog({
               {installments} cuota{installments === 1 ? "" : "s"} de ≈ {formatCurrency(installmentPreview)} cada una (mensual)
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="startDate">Inicio de vigencia</Label>
               <Input id="startDate" name="startDate" type="date" defaultValue={today} required />
@@ -107,7 +107,7 @@ export function ConvertDialog({
               <Input id="endDate" name="endDate" type="date" defaultValue={nextYear} required />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Forma de pago</Label>
               <Select name="paymentFrequency" defaultValue="ANNUAL">

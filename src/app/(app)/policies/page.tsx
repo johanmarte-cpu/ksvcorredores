@@ -31,7 +31,7 @@ export default async function PoliciesPage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="space-y-4">
-      <FadeIn className="flex items-center justify-between">
+      <FadeIn className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Pólizas</h1>
         <NewPolicyDialog
           clients={clients.map((c) => ({ id: c.id, name: clientDisplayName(c) }))}

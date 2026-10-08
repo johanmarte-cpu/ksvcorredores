@@ -56,7 +56,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
 
   return (
     <div className="space-y-6">
-      <FadeIn className="flex items-start justify-between">
+      <FadeIn className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">{policy.policyNumber}</h1>
           <p className="text-sm text-muted-foreground">
@@ -86,7 +86,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
 
       <FadeIn delay={0.15}>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
           <div>
             <CardTitle className="text-base">Acuerdo de pago</CardTitle>
             <p className="text-xs text-muted-foreground">
@@ -94,7 +94,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
               distintas con &quot;Editar acuerdo de pago&quot;
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button asChild size="sm" variant="outline">
               <Link href={`/print/policies/${policy.id}`} target="_blank">
                 <Printer className="mr-1 h-4 w-4" /> Imprimir
@@ -152,7 +152,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
 
       <FadeIn delay={0.2}>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
           <CardTitle className="text-base">Comisiones</CardTitle>
           <NewCommissionDialog policyId={policy.id} defaultAmount={Number(policy.commissionAmount)} />
         </CardHeader>
@@ -198,7 +198,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
 
       <FadeIn delay={0.25}>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
           <CardTitle className="text-base">Referido</CardTitle>
           {referrers.length > 0 && (
             <AssignReferralDialog
@@ -249,7 +249,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
 
       <FadeIn delay={0.3}>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
           <CardTitle className="text-base">Reclamaciones</CardTitle>
           <Button asChild size="sm" variant="secondary">
             <Link href={`/claims/new?policyId=${policy.id}`}>Nueva reclamación</Link>

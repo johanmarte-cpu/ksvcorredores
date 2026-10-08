@@ -34,7 +34,7 @@ export function NewClaimForm({ policies, defaultPolicyId }: { policies: Policy[]
         <Label htmlFor="caseNumber">Número de caso</Label>
         <Input id="caseNumber" name="caseNumber" required />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="claimType">Tipo de siniestro</Label>
           <Input id="claimType" name="claimType" placeholder="Colisión, robo, incendio..." required />

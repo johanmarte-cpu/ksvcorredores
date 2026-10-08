@@ -22,7 +22,7 @@ export default async function ClaimDetailPage({ params }: { params: Promise<{ id
 
   return (
     <div className="space-y-6">
-      <FadeIn className="flex items-start justify-between">
+      <FadeIn className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Caso {claim.caseNumber}</h1>
           <p className="text-sm text-muted-foreground">

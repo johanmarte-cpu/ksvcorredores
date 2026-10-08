@@ -32,7 +32,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
   return (
     <div className="space-y-6">
-      <FadeIn className="flex items-start justify-between">
+      <FadeIn className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">{clientDisplayName(client)}</h1>
           <p className="text-sm text-muted-foreground">
@@ -161,7 +161,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
       <FadeIn delay={0.15}>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
           <div className="flex items-center gap-2">
             <FileCheck2 className="h-4 w-4 text-muted-foreground" />
             <div>

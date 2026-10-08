@@ -55,7 +55,7 @@ export function NewPolicyDialog({
           <Plus className="mr-1 h-4 w-4" /> Nueva póliza
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Nueva póliza</DialogTitle>
         </DialogHeader>
@@ -75,7 +75,7 @@ export function NewPolicyDialog({
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Aseguradora</Label>
               <Select name="insurerId" required onValueChange={setInsurerId}>
@@ -116,7 +116,7 @@ export function NewPolicyDialog({
             <Label htmlFor="policyNumber">Número de póliza</Label>
             <Input id="policyNumber" name="policyNumber" required />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="premium">Prima</Label>
               <Input
@@ -135,7 +135,7 @@ export function NewPolicyDialog({
               <Input id="commissionPercentage" name="commissionPercentage" type="number" step="0.01" min="0" max="100" required />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3 rounded-md border bg-muted/40 p-3 text-sm">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 rounded-md border bg-muted/40 p-3 text-sm">
             <div>
               <p className="text-xs text-muted-foreground">Prima</p>
               <p className="font-medium">{formatCurrency(Number(premium) || 0)}</p>
@@ -153,7 +153,7 @@ export function NewPolicyDialog({
             <p className="text-xs text-muted-foreground">
               Inicial ({downPaymentRate}% de la prima): <span className="font-medium text-foreground">{formatCurrency(downPayment)}</span>
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label htmlFor="installments">Cuotas para el restante</Label>
                 <Input
@@ -188,7 +188,7 @@ export function NewPolicyDialog({
               {installments} cuota{installments === 1 ? "" : "s"} de ≈ {formatCurrency(installmentPreview)} cada una (mensual)
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="startDate">Inicio de vigencia</Label>
               <Input id="startDate" name="startDate" type="date" defaultValue={today} required />

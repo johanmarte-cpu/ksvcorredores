@@ -52,7 +52,7 @@ export function NewClientDialog() {
 
           {type === "PERSON" ? (
             <>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">Nombre</Label>
                   <Input id="firstName" name="firstName" required />
@@ -79,7 +79,7 @@ export function NewClientDialog() {
             <Input id="taxId" name="taxId" required />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="email">Correo</Label>
               <Input id="email" name="email" type="email" />
@@ -90,7 +90,7 @@ export function NewClientDialog() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="address">Dirección</Label>
               <Input id="address" name="address" />

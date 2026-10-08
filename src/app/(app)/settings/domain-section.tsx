@@ -59,7 +59,7 @@ export function DomainSection({ domain }: { domain: DomainInfo | { error: string
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
         <div>
           <CardTitle className="text-base">Dominio de envío</CardTitle>
           <CardDescription>{domain.name}</CardDescription>

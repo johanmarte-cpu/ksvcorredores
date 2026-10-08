@@ -67,7 +67,7 @@ export function EditClientDialog({ client }: { client: ClientForEdit }) {
 
           {type === "PERSON" ? (
             <>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">Nombre</Label>
                   <Input id="firstName" name="firstName" defaultValue={client.firstName ?? ""} required />
@@ -99,7 +99,7 @@ export function EditClientDialog({ client }: { client: ClientForEdit }) {
             <Input id="taxId" name="taxId" defaultValue={client.taxId} required />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="email">Correo</Label>
               <Input id="email" name="email" type="email" defaultValue={client.email ?? ""} />
@@ -110,7 +110,7 @@ export function EditClientDialog({ client }: { client: ClientForEdit }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="address">Dirección</Label>
               <Input id="address" name="address" defaultValue={client.address ?? ""} />

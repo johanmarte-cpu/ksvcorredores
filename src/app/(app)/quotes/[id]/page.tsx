@@ -40,7 +40,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
 
   return (
     <div className="space-y-6">
-      <FadeIn className="flex items-start justify-between">
+      <FadeIn className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">{clientDisplayName(quote.client)}</h1>
           <p className="text-sm text-muted-foreground">
@@ -69,7 +69,7 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
         )}
         {quote.requests.map((request) => (
           <Card key={request.id} className={request.option?.isSelected ? "border-primary" : undefined}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
               <CardTitle className="text-base">{request.insurer.name}</CardTitle>
               <Badge className={statusClass(QUOTE_REQUEST_STATUS_TONE, request.status)}>
                 {QUOTE_REQUEST_STATUS_LABELS[request.status]}

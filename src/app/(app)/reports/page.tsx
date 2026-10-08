@@ -161,7 +161,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
       </FadeIn>
 
       <Tabs defaultValue={defaultTab}>
-        <TabsList>
+        <TabsList className="max-w-full justify-start overflow-x-auto">
           <TabsTrigger value="portfolio">Cartera activa/inactiva</TabsTrigger>
           <TabsTrigger value="income">Ingresos por mes</TabsTrigger>
           <TabsTrigger value="collections">Cobros</TabsTrigger>

@@ -233,7 +233,7 @@ export function KnowledgeForm({
         <CardHeader>
           <CardTitle className="text-base">Actividad económica</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1">
             <Label>Actividad</Label>
             <Select name="economicActivity" defaultValue={(d.economicActivity as string) || undefined}>
@@ -261,7 +261,7 @@ export function KnowledgeForm({
           <CardTitle className="text-base">Información financiera</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1">
               <Label>Ingresos mensuales actividad principal</Label>
               <Select name="monthlyIncomeRange" defaultValue={(d.monthlyIncomeRange as string) || undefined}>
@@ -481,7 +481,7 @@ export function KnowledgeForm({
         <CardHeader>
           <CardTitle className="text-base">Solicitud de seguro</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1">
             <Label>Ramo</Label>
             <Select name="insuranceBranch" defaultValue={(d.insuranceBranch as string) || undefined}>
@@ -508,7 +508,7 @@ export function KnowledgeForm({
         <CardHeader>
           <CardTitle className="text-base">Verificación</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1">
             <Label htmlFor="verificationDate">Fecha</Label>
             <Input id="verificationDate" name="verificationDate" type="date" defaultValue={toDateInput(d.verificationDate)} />

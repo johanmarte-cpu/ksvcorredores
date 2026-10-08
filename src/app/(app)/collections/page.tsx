@@ -65,7 +65,7 @@ export default async function CollectionsPage({
 
   return (
     <div className="space-y-6">
-      <FadeIn className="flex items-center justify-between">
+      <FadeIn className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Cobros</h1>
         <Button asChild size="sm" variant="outline">
           <Link href="/reports?tab=collections">

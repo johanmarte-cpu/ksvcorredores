@@ -36,7 +36,7 @@ export function RegisterOptionDialog({ quoteId, quoteRequestId }: { quoteId: str
         <form action={formAction} className="space-y-4">
           <input type="hidden" name="quoteId" value={quoteId} />
           <input type="hidden" name="quoteRequestId" value={quoteRequestId} />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="premium">Prima</Label>
               <Input id="premium" name="premium" type="number" step="0.01" min="0" required />
