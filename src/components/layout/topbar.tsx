@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { auth, signOut } from "@/auth";
 import { ROLE_LABELS } from "@/lib/labels";
 import { MobileNav } from "./mobile-nav";
+import { AgendaBell } from "./agenda-bell";
 
 export async function Topbar() {
   const session = await auth();
@@ -21,6 +22,7 @@ export async function Topbar() {
       </div>
 
       <div className="flex items-center gap-3">
+        <AgendaBell />
         <div className="hidden text-right sm:block">
           <p className="text-sm font-medium leading-none">{user?.name}</p>
           <p className="text-xs text-muted-foreground">{user?.role ? ROLE_LABELS[user.role] : ""}</p>

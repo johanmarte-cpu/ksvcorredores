@@ -23,6 +23,7 @@ const settingsSchema = z.object({
   notifyPaymentReminders: z.coerce.boolean(),
   notifyRenewalNotices: z.coerce.boolean(),
   notifyBirthdays: z.coerce.boolean(),
+  notifyTaskDigest: z.coerce.boolean(),
 });
 
 export async function updateSettings(_prevState: { error?: string; success?: boolean } | undefined, formData: FormData) {
@@ -46,6 +47,7 @@ export async function updateSettings(_prevState: { error?: string; success?: boo
     notifyPaymentReminders: formData.get("notifyPaymentReminders") === "on",
     notifyRenewalNotices: formData.get("notifyRenewalNotices") === "on",
     notifyBirthdays: formData.get("notifyBirthdays") === "on",
+    notifyTaskDigest: formData.get("notifyTaskDigest") === "on",
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
 
@@ -69,6 +71,7 @@ export async function updateSettings(_prevState: { error?: string; success?: boo
     notifyPaymentReminders: parsed.data.notifyPaymentReminders,
     notifyRenewalNotices: parsed.data.notifyRenewalNotices,
     notifyBirthdays: parsed.data.notifyBirthdays,
+    notifyTaskDigest: parsed.data.notifyTaskDigest,
     updatedById: session.user.id,
   };
 

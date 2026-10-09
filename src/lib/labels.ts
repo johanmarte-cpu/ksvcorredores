@@ -158,3 +158,17 @@ export const DOMAIN_STATUS_LABELS: Record<string, string> = {
   partially_failed: "Parcialmente fallido",
   temporary_failure: "Falla temporal",
 };
+
+export const TASK_STATUS_LABELS: Record<string, string> = {
+  PENDING: "Pendiente",
+  IN_PROGRESS: "En curso",
+  DONE: "Completada",
+  CANCELLED: "Cancelada",
+};
+
+export const TASK_PRIORITY_LABELS: Record<string, string> = {
+  LOW: "Baja",
+  MEDIUM: "Media",
+  HIGH: "Alta",
+  URGENT: "Urgente",
+};

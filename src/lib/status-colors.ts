@@ -106,3 +106,17 @@ export const ROLE_TONE: Record<string, Tone> = {
 export function statusClass(map: Record<string, Tone>, status: string) {
   return TONES[map[status] ?? "slate"];
 }
+
+export const TASK_STATUS_TONE: Record<string, Tone> = {
+  PENDING: "amber",
+  IN_PROGRESS: "blue",
+  DONE: "emerald",
+  CANCELLED: "slate",
+};
+
+export const TASK_PRIORITY_TONE: Record<string, Tone> = {
+  LOW: "slate",
+  MEDIUM: "blue",
+  HIGH: "amber",
+  URGENT: "rose",
+};

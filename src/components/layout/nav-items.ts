@@ -12,6 +12,7 @@ import {
   Settings,
   Banknote,
   Handshake,
+  CalendarCheck,
 } from "lucide-react";
 
 import type { LucideIcon } from "lucide-react";
@@ -20,6 +21,7 @@ type NavItem = { href: string; label: string; icon: LucideIcon; adminOnly?: bool
 
 export const navItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/agenda", label: "Agenda", icon: CalendarCheck },
   { href: "/clients", label: "Clientes", icon: Users },
   { href: "/quotes", label: "Cotizaciones", icon: FileText },
   { href: "/policies", label: "Pólizas", icon: ShieldCheck },

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
-import { paymentReminderEmail, renewalNoticeEmail, birthdayEmail } from "@/lib/notification-templates";
+import { paymentReminderEmail, renewalNoticeEmail, birthdayEmail, taskDigestEmail } from "@/lib/notification-templates";
+import { businessToday, OPEN_TASK_STATUSES } from "@/lib/agenda";
+import { TASK_PRIORITY_LABELS } from "@/lib/labels";
 import { clientDisplayName } from "@/lib/format";
 import { getSettings } from "@/lib/settings";
 
@@ -27,7 +29,7 @@ export async function GET(request: NextRequest) {
     ? `${settings.emailFromName || settings.companyName} <${settings.emailFromAddress}>`
     : (process.env.EMAIL_FROM ?? `${settings.companyName} <notificaciones@ksvcorredores.com>`);
 
-  const results = { paymentReminders: 0, renewalNotices: 0, birthdays: 0, errors: [] as string[] };
+  const results = { paymentReminders: 0, renewalNotices: 0, birthdays: 0, taskDigests: 0, errors: [] as string[] };
 
   // ── Recordatorios de pago ──
   if (settings.notifyPaymentReminders) {
@@ -123,6 +125,52 @@ export async function GET(request: NextRequest) {
         results.birthdays++;
       } catch (e) {
         results.errors.push(`client ${client.id}: ${e instanceof Error ? e.message : "error"}`);
+      }
+    }
+  }
+
+  // ── Resumen diario de agenda (usuarios internos) ──
+  if (settings.notifyTaskDigest) {
+    const today = businessToday();
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+    const tasks = await prisma.task.findMany({
+      where: {
+        status: { in: [...OPEN_TASK_STATUSES] },
+        dueDate: { lt: tomorrow },
+        assignedTo: { active: true },
+      },
+      orderBy: { dueDate: "asc" },
+      select: { title: true, dueDate: true, priority: true, assignedTo: { select: { id: true, name: true, email: true } } },
+    });
+
+    const byUser = new Map<string, { user: { name: string; email: string }; tasks: typeof tasks }>();
+    for (const task of tasks) {
+      if (!task.assignedTo) continue;
+      const entry = byUser.get(task.assignedTo.id) ?? { user: task.assignedTo, tasks: [] };
+      entry.tasks.push(task);
+      byUser.set(task.assignedTo.id, entry);
+    }
+
+    const agendaUrl = `${new URL(request.url).origin}/agenda`;
+    for (const [userId, { user, tasks: userTasks }] of byUser) {
+      try {
+        await sendEmail({
+          to: user.email,
+          subject: `Tu agenda de hoy — ${userTasks.length} ${userTasks.length === 1 ? "tarea" : "tareas"}`,
+          html: taskDigestEmail({
+            userName: user.name,
+            overdue: userTasks.filter((t) => t.dueDate! < today),
+            today: userTasks.filter((t) => t.dueDate! >= today),
+            agendaUrl,
+            companyName: settings.companyName,
+            priorityLabels: TASK_PRIORITY_LABELS,
+          }),
+          apiKey,
+          from,
+        });
+        results.taskDigests++;
+      } catch (e) {
+        results.errors.push(`digest ${userId}: ${e instanceof Error ? e.message : "error"}`);
       }
     }
   }

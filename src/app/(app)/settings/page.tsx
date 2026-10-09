@@ -38,6 +38,7 @@ export default async function SettingsPage() {
           notifyPaymentReminders={settings.notifyPaymentReminders}
           notifyRenewalNotices={settings.notifyRenewalNotices}
           notifyBirthdays={settings.notifyBirthdays}
+          notifyTaskDigest={settings.notifyTaskDigest}
         />
       </FadeIn>
 

@@ -219,6 +219,7 @@ model User {
   tasksAssigned     Task[]                @relation("TaskAssignedTo")
   tasksCreated      Task[]                @relation("TaskCreatedBy")
   notifications     Notification[]
+  agendaNotes       AgendaNote[]
   auditLogs         AuditLog[]
   uploadedDocuments ClientDocument[]
   knowledgeForms    ClientKnowledgeForm[]
@@ -743,22 +744,43 @@ model ClaimEvent {
 // ─────────────────────────────────────────────────────────────
 
 model Task {
-  id           String       @id @default(cuid())
-  title        String
-  description  String?
-  dueDate      DateTime?
-  assignedToId String?
-  assignedTo   User?        @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
-  createdById  String?
-  createdBy    User?        @relation("TaskCreatedBy", fields: [createdById], references: [id])
-  status       TaskStatus   @default(PENDING)
-  priority     TaskPriority @default(MEDIUM)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id                  String       @id @default(cuid())
+  title               String
+  description         String?
+  dueDate             DateTime?
+  assignedToId        String?
+  assignedTo          User?        @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
+  createdById         String?
+  createdBy           User?        @relation("TaskCreatedBy", fields: [createdById], references: [id])
+  status              TaskStatus   @default(PENDING)
+  priority            TaskPriority @default(MEDIUM)
+  // Momento exacto de la alerta (instante real, no fecha-solo). La alerta queda activa en la
+  // campana de la barra superior desde remindAt hasta que el usuario la descarta o completa la tarea.
+  remindAt            DateTime?
+  reminderDismissedAt DateTime?
+  completedAt         DateTime?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
   renewal PolicyRenewal?
 
+  @@index([assignedToId, status])
   @@map("tasks")
+}
+
+// Anotaciones personales de la agenda (cada usuario ve solo las suyas).
+model AgendaNote {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  content   String
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("agenda_notes")
 }
 
 model Notification {
@@ -797,6 +819,7 @@ model SystemSettings {
   notifyPaymentReminders Boolean @default(true)
   notifyRenewalNotices   Boolean @default(true)
   notifyBirthdays        Boolean @default(true)
+  notifyTaskDigest       Boolean @default(true) // resumen diario de tareas por correo a cada usuario
 
   // Dominio de envío verificado en Resend (para que los correos no lleguen como spam).
   emailDomain    String?

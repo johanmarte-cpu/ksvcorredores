@@ -24,6 +24,7 @@ export function SettingsForm(props: {
   notifyPaymentReminders: boolean;
   notifyRenewalNotices: boolean;
   notifyBirthdays: boolean;
+  notifyTaskDigest: boolean;
 }) {
   const [state, formAction, pending] = useActionState(updateSettings, undefined);
 
@@ -197,6 +198,19 @@ export function SettingsForm(props: {
                 className="h-4 w-4 rounded border-input accent-[var(--brand-blue)]"
               />
               Felicitaciones de cumpleaños
+            </label>
+          </div>
+
+          <div className="space-y-3 border-t pt-4">
+            <p className="text-sm font-medium">Notificaciones al equipo</p>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="notifyTaskDigest"
+                defaultChecked={props.notifyTaskDigest}
+                className="h-4 w-4 rounded border-input accent-[var(--brand-blue)]"
+              />
+              Resumen diario de agenda por correo (tareas vencidas y del día)
             </label>
           </div>
         </CardContent>
